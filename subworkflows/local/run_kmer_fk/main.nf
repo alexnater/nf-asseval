@@ -38,7 +38,7 @@ workflow RUN_KMER_FK {
                 type: meta.type,
                 samples_per_type: meta.samples_per_type
             ]
-            [ meta.sample, new_meta, fastq[0] ]
+            [ meta.sample, new_meta, fastq ]
         }
         .groupTuple(by: [0, 1])
         .join (
@@ -49,7 +49,7 @@ workflow RUN_KMER_FK {
             remainder: true
         )
         .filter { sample, meta, fastqs, db -> !db }
-        .map { sample, meta, fastqs, db -> [ meta, fastqs ] }
+        .map { sample, meta, fastqs, db -> [ meta, fastqs.flatten() ] }
         .set { ch_to_count }
     
     //

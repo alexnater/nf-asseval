@@ -79,8 +79,8 @@
                     "type": "string",
                     "description": "Steps to run.",
                     "fa_icon": "fas fa-toolbox",
-                    "help_text": "Multiple steps separated with commas. Possible values: qc, evaluation, mapping, stats, variant_calling, report",
-                    "pattern": "^((qc|evaluation|mapping|stats|variant_calling|report)?,?)*"
+                    "help_text": "Multiple steps separated with commas. Possible values: qc, evaluation, mappability, mapping, stats, variant_calling, report",
+                    "pattern": "^((qc|evaluation|mappability|mapping|stats|variant_calling|report)?,?)*"
                 },
                 "kmer_size": {
                     "type": "integer",
@@ -328,6 +328,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/main_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

@@ -39,8 +39,8 @@ workflow ASSEVAL {
     ch_kmers      // channel: samplesheet read in from --kmers
 
     main:
-    ch_versions = Channel.empty()
-    ch_multiqc_files = Channel.empty()
+    ch_versions = channel.empty()
+    ch_multiqc_files = channel.empty()
 
     def steps = params.steps ? params.steps.split(',') : []
     if ((steps.contains('stats') || steps.contains('variant_calling')) && !steps.contains('mapping')) {
@@ -104,7 +104,7 @@ workflow ASSEVAL {
         // SUBWORKFLOW: run_kmer_fk
         //    
         RUN_KMER_FK (
-            ch_reads.filter { meta, fastq -> meta.type == 'hifi' },
+            ch_reads.filter { meta, fastq -> meta.type == 'hifi' || meta.type == 'illumina' },
             ch_fasta_fai,
             ch_kmers,
             params.kmer_size
@@ -333,7 +333,7 @@ workflow ASSEVAL {
     //
     // Collate and save software versions
     //
-    def topic_versions = Channel.topic("versions")
+    def topic_versions = channel.topic("versions")
         .distinct()
         .branch { entry ->
             versions_file: entry instanceof Path

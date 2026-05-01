@@ -3,8 +3,8 @@ process FASTK_MERGE {
     label 'process_high'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/fastk:1.1.0--h71df26d_1' :
-        'biocontainers/fastk:1.1.0--h71df26d_1' }"
+        'https://depot.galaxyproject.org/singularity/fastk:1.2--h71df26d_1' :
+        'biocontainers/fastk:1.2--h71df26d_1' }"
 
     input:
     tuple val(meta), path(ktabs)
@@ -28,7 +28,7 @@ process FASTK_MERGE {
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def FASTK_VERSION = '1.1.0--h71df26d_1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
+    def FASTK_VERSION = '1.2--h71df26d_1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
 
     """
     mkdir -p tmp    
