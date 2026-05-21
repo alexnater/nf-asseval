@@ -12,7 +12,7 @@ process SMUDGEPLOT {
     output:
     tuple val(meta), path("*.smu")            , emit: smu
     tuple val(meta), path("*.pdf")            , emit: pdf
-    path "versions.yml"                       , emit: versions
+    tuple val("${task.process}"), val('smudgeplot'), eval('smudgeplot.py --version 2>&1 | sed "s/^.*smudgeplot //"'), emit: versions_smudgeplot, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -41,11 +41,6 @@ process SMUDGEPLOT {
         ${prefix}_text.smu
 
     rm -r tmp
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        smudgeplot: \$(smudgeplot.py --version 2>&1 | sed 's/^.*smudgeplot //')
-    END_VERSIONS
     """
 
     stub:
@@ -57,10 +52,5 @@ process SMUDGEPLOT {
     touch ${prefix}_centralities.pdf
     touch ${prefix}_smudgeplot.pdf
     touch ${prefix}_smudgeplot_log10.pdf
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        smudgeplot: \$(smudgeplot.py --version 2>&1 | sed 's/^.*smudgeplot //')
-    END_VERSIONS
     """
 }

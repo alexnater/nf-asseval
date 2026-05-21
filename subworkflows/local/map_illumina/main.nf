@@ -26,33 +26,15 @@ workflow MAP_ILLUMINA {
 
     main:
 
-    ch_versions = Channel.empty()
-
     //
     // MODULE: Run fastp
     //
     FASTP (
-        ch_reads,
-        [],
+        ch_reads.map { meta, fastqs -> [ meta, fastqs, [] ] },
         false,
         false,
         false
     )
-    ch_versions = ch_versions.mix(FASTP.out.versions.first())
-
-/*
-    // prepare channel for reference genomes:
-    ch_fasta_fai
-        .combine(ch_reads.first().map { true })     // this prevents building the index if the reads channel is empty.
-        .map { meta, fasta, fai, trigger -> [ meta, fasta ] }
-        .set { ch_to_index }
-
-    // Create BWA index:
-    BWA_INDEX(ch_to_index)
-        .index
-        .set { ch_index }
-    ch_versions = ch_versions.mix(BWA_INDEX.out.versions.first())
-*/
 
     // Prepare channel that joins reads with reference inidices:
     FASTP.out.reads
@@ -71,7 +53,6 @@ workflow MAP_ILLUMINA {
         false
     ).bam
      .set { ch_bam }
-    ch_versions = ch_versions.mix(BWA_MEM.out.versions.first())
 
     // group entries by sample:
     ch_bam
@@ -107,7 +88,6 @@ workflow MAP_ILLUMINA {
         ch_to_dedup.fasta,
         ch_to_dedup.fai
     )
-    ch_versions = ch_versions.mix(GATK4_MARKDUPLICATES.out.versions.first())
 
     // join bam files and the corresponding index files: 
     GATK4_MARKDUPLICATES.out.bam
@@ -116,5 +96,4 @@ workflow MAP_ILLUMINA {
 
     emit:
     bam_bai                  // channel: [ val(meta), path(bam), path(bai) ]
-    versions = ch_versions   // channel: [ versions.yml ]
 }

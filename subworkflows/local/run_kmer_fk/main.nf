@@ -27,10 +27,9 @@ workflow RUN_KMER_FK {
     kmer_size     // value: k-mer size
 
     main:
-    ch_versions = Channel.empty()
 
     // Group reads by sample and join with pre-existing fastk databases
-    ch_reads
+    ch_to_count = ch_reads
         .map { meta, fastq ->
             def new_meta = [
                 id: meta.sample,
@@ -50,7 +49,6 @@ workflow RUN_KMER_FK {
         )
         .filter { sample, meta, fastqs, db -> !db }
         .map { sample, meta, fastqs, db -> [ meta, fastqs.flatten() ] }
-        .set { ch_to_count }
     
     //
     // MODULE: Run fastk by sample
@@ -59,17 +57,15 @@ workflow RUN_KMER_FK {
         ch_to_count,
         kmer_size
     )
-    ch_versions = ch_versions.mix(FASTK_FASTK.out.versions.first())
 
     // Join outputs of fastk
-    FASTK_FASTK.out.ktab
+    ch_fastk = FASTK_FASTK.out.ktab
         .join(FASTK_FASTK.out.data, failOnDuplicate: true, failOnMismatch: true)
         .join(FASTK_FASTK.out.hist, failOnDuplicate: true, failOnMismatch: true)
         .join(FASTK_FASTK.out.txt, failOnDuplicate: true, failOnMismatch: true)
         .map { meta, ktab, data, hist, txt ->
             [ meta + [kmer_size: kmer_size], ktab, data, hist, txt ]
         }
-        .set { ch_fastk }
 
     //
     // MODULE: Run genescope.fk
@@ -77,16 +73,14 @@ workflow RUN_KMER_FK {
     GENESCOPEFK (
         ch_fastk.map { meta, ktab, data, hist, txt -> [ meta, txt ] }
     )
-    ch_versions = ch_versions.mix(GENESCOPEFK.out.versions.first())
 
     // Combine fastk ktabs with reference file
-    ch_fastk
+    ch_to_merqury = ch_fastk
         .map { meta, ktab, data, hist, txt -> [ meta.sample, meta, ktab, data, hist, txt ] }
         .combine(ch_fasta_fai.map { meta, fasta, fai -> [ meta.sample, meta, fasta, fai ] }, by: 0)
         .map { sample, meta, ktab, data, hist, txt, meta2, fasta, fai ->
             [ meta + [ref: meta2.id], hist, ktab, data, fasta, [] ]
         }
-        .set { ch_to_merqury }
 
     //
     // MODULE: Run merqury
@@ -96,7 +90,6 @@ workflow RUN_KMER_FK {
         [[:], [], []],
         [[:], [], []]
     )
-    ch_versions = ch_versions.mix(MERQURYFK_MERQURYFK.out.versions.first())
 
     //
     // MODULE: Run smudgeplot
@@ -105,11 +98,9 @@ workflow RUN_KMER_FK {
         ch_fastk.map { meta, ktab, data, hist, txt -> [ meta, ktab, data ] },
         4
     )
-    ch_versions = ch_versions.mix(SMUDGEPLOT.out.versions.first())
 
     emit:
     summary = GENESCOPEFK.out.summary       // channel: [ meta, summary ]
     stats = MERQURYFK_MERQURYFK.out.stats   // channel: [ meta, stats ]
     qv = MERQURYFK_MERQURYFK.out.qv         // channel: [ meta, qv ]
-    versions = ch_versions                  // channel: [ versions.yml ]
 }

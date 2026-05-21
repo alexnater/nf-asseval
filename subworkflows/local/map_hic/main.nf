@@ -35,25 +35,11 @@ workflow MAP_HIC {
     // MODULE: Run fastp
     //
     FASTP (
-        ch_reads,
-        [],
+        ch_reads.map { meta, fastqs -> [ meta, fastqs, [] ] },
         false,
         false,
         false
     )
-    ch_versions = ch_versions.mix(FASTP.out.versions.first())
-
-/*
-    // prepare channel for reference genomes:
-    ch_fasta_fai
-        .combine(ch_reads.first().map { true })     // this prevents building the index if the reads channel is empty.
-        .map { meta, fasta, fai, trigger -> [ meta, fasta ] }
-        .set { ch_to_index }
-
-    // Create BWA index:
-    BWA_INDEX(ch_to_index)
-    ch_versions = ch_versions.mix(BWA_INDEX.out.versions.first())
-*/
 
     // Prepare channel that joins reads with reference inidices:
     FASTP.out.reads
@@ -139,27 +125,24 @@ workflow MAP_HIC {
     ch_versions = ch_versions.mix(PRETEXTSNAPSHOT.out.versions.first())
 
     // combine bam files with fasta reference and fasta index:
-    ch_bam_bai
+    ch_to_yahs = ch_bam_bai
         .map { meta, bam, bai -> [ meta.ref, meta, bam, bai ] }
-        .combine(ch_reference.map { meta, fasta, fai, index ->
-            [ meta.id, fasta, fai ]
+        .combine(
+            ch_reference.map { meta, fasta, fai, index ->
+                [ meta.id, fasta, fai ]
             },
-            by: 0)
-        .multiMap { id, meta, bam, bai, fasta, fai ->
-            bam: [ meta, bam ]
-            fasta:   fasta
-            fai:     fai
-        }.set { ch_to_yahs }
+            by: 0
+        )
+        .map { id, meta, bam, bai, fasta, fai ->
+            [ meta, fasta, fai, bam, [] ]
+        }
 
     //
     // MODULE: Run yahs
     //
     YAHS (
-        ch_to_yahs.bam,
-        ch_to_yahs.fasta,
-        ch_to_yahs.fai
+        ch_to_yahs
     )
-    ch_versions = ch_versions.mix(YAHS.out.versions.first())
 
     emit:
     bam_bai  = ch_bam_bai                 // channel: [ val(meta), path(bam), path(bai) ]

@@ -1,13 +1,13 @@
 # General settings:
 #-----------------------
 project: "p2024-0022"
-outdir: "results_evaluation"
-#custom_config_base: "/data/users/anater/nf-core-configs"
+outdir: "results_evaluation_test"
+custom_config_base: "/data/users/anater/nf-core-configs"
 
 # Sample details:
 #-----------------------
-assemblies: "test/assemblies.cleaned.csv"
-reads: "test/reads_hifi.csv,test/reads_illumina_trimmed.csv"
+assemblies: "test/assemblies_test.csv"
+reads: "test/reads_hifi_test.csv"
 #kmers: "test/kmers.csv"
 
 # Workflow settings:

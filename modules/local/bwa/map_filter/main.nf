@@ -68,7 +68,7 @@ process BWA_MAP_FILTER {
     stub:
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.bam
 

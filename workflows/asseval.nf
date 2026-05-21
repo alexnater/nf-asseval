@@ -53,10 +53,10 @@ workflow ASSEVAL {
     PREPARE_GENOMES ( 
         ch_assemblies.map { meta, fasta, gtf, yaml -> [ meta, fasta, gtf ] },
         ch_reads
-    ).genomes
-    .map { meta, fasta, fai, dict, gtf, index -> [ meta, fasta, fai ] }
-    .set { ch_fasta_fai }
-    ch_versions = ch_versions.mix(PREPARE_GENOMES.out.versions)
+    )
+    
+    ch_fasta_fai = PREPARE_GENOMES.out.genomes
+        .map { meta, fasta, fai, dict, gtf, index -> [ meta, fasta, fai ] }
 
     if (steps.contains('qc')) {
         //
@@ -73,22 +73,20 @@ workflow ASSEVAL {
         def busco_lineages_dir = file(params.busco_lineages_path, type: 'dir', checkIfExists: true)
 
         // Group assemblies by type
-        ch_assemblies
+        ch_by_type = ch_assemblies
             .map { meta, fasta, gtf, yaml ->
                 [ [comp: 'by_type', id: meta.type, type: meta.type], [ meta.id, fasta ] ]
             }
             .groupTuple(sort: { a, b -> a[0] <=> b[0] })
             .map { meta, tuples -> [ meta + [labels: tuples.collect { it[0] }], tuples.collect { it[1] } ] }
-            .set { ch_by_type }
 
         // Group assemblies by sample
-        ch_assemblies
+        ch_by_sample = ch_assemblies
             .map { meta, fasta, gtf, yaml ->
                 [ [comp: 'by_sample', id: meta.sample, sample: meta.sample], [ meta.id, fasta ] ]
             }
             .groupTuple(sort: { a, b -> a[0] <=> b[0] })
             .map { meta, tuples -> [ meta + [labels: tuples.collect { it[0] }], tuples.collect { it[1] } ] }
-            .set { ch_by_sample }
 
         //
         // MODULE: Run quast
@@ -98,7 +96,6 @@ workflow ASSEVAL {
             [ [:], [] ],
             [ [:], [] ]
         )
-        ch_versions = ch_versions.mix(QUAST.out.versions.first())
 
         //
         // SUBWORKFLOW: run_kmer_fk
@@ -109,7 +106,6 @@ workflow ASSEVAL {
             ch_kmers,
             params.kmer_size
         )
-        ch_versions = ch_versions.mix(RUN_KMER_FK.out.versions)
 
         //
         // MODULE: Run busco
@@ -122,7 +118,6 @@ workflow ASSEVAL {
             [],
             true
         )
-        ch_versions = ch_versions.mix(BUSCO_BUSCO.out.versions.first())
     }
 
     if (steps.contains('mappability')) {
@@ -142,11 +137,12 @@ workflow ASSEVAL {
     if (steps.contains('mapping')) {
 
         // Branch reads by read type:
-        ch_reads.branch { meta, reads ->
-            longreads: meta.type == 'hifi' || meta.type == 'ont'
-            hic: meta.type == 'hic'
-            illumina:  true
-        }.set { ch_reads_bytype }
+        ch_reads_bytype = ch_reads
+            .branch { meta, reads ->
+                longreads: meta.type == 'hifi' || meta.type == 'ont'
+                hic: meta.type == 'hic'
+                illumina:  true
+            }
 
         //
         // SUBWORKFLOW: map_longreads
@@ -178,10 +174,9 @@ workflow ASSEVAL {
         ch_versions = ch_versions.mix(MAP_ILLUMINA.out.versions)
 
         // Combine bam files with reference
-        MAP_LONGREADS.out.bam_bai
+        ch_bam_bai = MAP_LONGREADS.out.bam_bai
             .mix(MAP_HIC.out.bam_bai)
             .mix(MAP_ILLUMINA.out.bam_bai)
-            .set { ch_bam_bai }
     }
     
     if (steps.contains('stats')) {
@@ -237,15 +232,14 @@ workflow ASSEVAL {
     if (steps.contains('report')) {
 
         // Generate window-wise stats
-        BAM_STATS.out.depth
+        ch_summaries = BAM_STATS.out.depth
             .filter { meta, summary -> meta.type == 'hifi' || meta.type == 'ont' }
             .map { meta, summary -> [ groupKey([ref: meta.ref, type: meta.type], meta.samples_per_type), [ meta.sample, summary ] ] }
             .groupTuple(sort: { a, b -> a[0] <=> b[0] })
             .map { meta, tuples -> [ meta.target, tuples.collect { it[0] }, tuples.collect { it[1] } ] }
-            .set { ch_summaries }
 
         // Join depth and vcf files per reference
-        BAM_DEPTH.out.depth
+        ch_to_winstats = BAM_DEPTH.out.depth
             .filter { meta, depth, tbi -> meta.type == 'hifi' || meta.type == 'ont' }
             .map { meta, depth, tbi -> [ [ref: meta.ref, type: meta.type], meta, depth, tbi ] }
             .join(VARIANT_CALLING.out.ind_vcf_tbi
@@ -266,7 +260,6 @@ workflow ASSEVAL {
                 input:     [ [id: 'winstats', type: meta.type, ref: ref, samples: tuple(samples)], depth, dtbi, vcf, tbi, summaries ]
                 fasta_fai: [ meta2, fasta, fai ]
             }
-            .set { ch_to_winstats }
 
         //
         // MODULE: windows_stats

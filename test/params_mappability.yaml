@@ -2,6 +2,7 @@
 #-----------------------
 project: "p2024-0022"
 outdir: "results_mappability"
+custom_config_base: "/data/users/anater/nf-core-configs"
 
 # Sample details:
 #-----------------------

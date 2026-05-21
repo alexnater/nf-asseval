@@ -24,8 +24,6 @@ workflow MAP_LONGREADS {
 
     main:
 
-    ch_versions = Channel.empty()
-
     // Group by sample and combine reads with references
     ch_reads
         .map { meta, fastqs ->
@@ -56,7 +54,6 @@ workflow MAP_LONGREADS {
         false,
         false        
     )
-    ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions.first())
 
     // join bam files and the corresponding index files: 
     MINIMAP2_ALIGN.out.bam
@@ -65,5 +62,4 @@ workflow MAP_LONGREADS {
 
     emit:
     bam_bai                  // channel: [ val(meta), path(bam), path(bai) ]
-    versions = ch_versions   // channel: [ versions.yml ]
 }
