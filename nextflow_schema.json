@@ -35,8 +35,8 @@
                     "type": "string",
                     "description": "Steps to run.",
                     "fa_icon": "fas fa-toolbox",
-                    "help_text": "Multiple steps separated with commas. Possible values: qc, evaluation, mappability, mapping, stats, variant_calling, report",
-                    "pattern": "^((qc|evaluation|mappability|mapping|stats|variant_calling|report)?,?)*"
+                    "help_text": "Multiple steps separated with commas. Possible values: qc, evaluation, kmer, mappability, mapping, stats, variant_calling, report",
+                    "pattern": "^((qc|evaluation|kmer|mappability|mapping|stats|variant_calling|report)?,?)*"
                 },
                 "kmers": {
                     "type": "string",

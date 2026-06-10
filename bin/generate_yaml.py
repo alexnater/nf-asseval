@@ -193,7 +193,7 @@ def parse_args(argv=None):
         help="Mosdepth file for ONT UL reads"
     )
     parser.add_argument(
-        "--ul",
+        "--hic",
         type=Path,
         required=False,
         help="Mosdepth file for HiC reads"

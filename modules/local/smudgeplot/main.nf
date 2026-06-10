@@ -3,7 +3,9 @@ process SMUDGEPLOT {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container "${projectDir}/assets/containers/fastk_merquryfk_smudgeplot.sif"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/45/45ca1be680749bc69ce0557205ffc6e5778e5032d3134ff8966258de51aa46cc/data' :
+        'community.wave.seqera.io/library/fastk_smudgeplot:c597618c48a0dba3' }"
 
     input:
     tuple val(meta), path(ktab), path(data)
@@ -11,7 +13,10 @@ process SMUDGEPLOT {
 
     output:
     tuple val(meta), path("*.smu")            , emit: smu
-    tuple val(meta), path("*.pdf")            , emit: pdf
+    tuple val(meta), path("*.sma")            , emit: sma
+    tuple val(meta), path("*.tsv")            , emit: report
+    tuple val(meta), path("*.png")            , emit: plots
+    tuple val(meta), path("*.txt")            , emit: txt
     tuple val("${task.process}"), val('smudgeplot'), eval('smudgeplot.py --version 2>&1 | sed "s/^.*smudgeplot //"'), emit: versions_smudgeplot, topic: versions
 
     when:
@@ -24,8 +29,9 @@ process SMUDGEPLOT {
 
     """
     mkdir -p tmp
-    
-    smudgeplot.py \\
+    export MPLCONFIGDIR=./tmp
+
+    smudgeplot \\
         hetmers \\
         -t $task.cpus \\
         -tmp tmp \\
@@ -34,11 +40,11 @@ process SMUDGEPLOT {
         $args \\
         $ktab
 
-    smudgeplot.py \\
+    smudgeplot \\
         all \\
         -o $prefix \\
         $args2 \\
-        ${prefix}_text.smu
+        ${prefix}.smu
 
     rm -r tmp
     """
@@ -48,9 +54,11 @@ process SMUDGEPLOT {
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}_text.smu
-    touch ${prefix}_centralities.pdf
-    touch ${prefix}_smudgeplot.pdf
-    touch ${prefix}_smudgeplot_log10.pdf
+    touch ${prefix}.smu
+    touch ${prefix}.smudge_report.tsv
+    touch ${prefix}_centralities.txt
+    touch ${prefix}_centralities.png
+    touch ${prefix}_smudgeplot.png
+    touch ${prefix}_smudgeplot_log10.png
     """
 }

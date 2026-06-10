@@ -9,7 +9,7 @@
 */
 
 include { FASTP                      } from '../../../modules/nf-core/fastp'
-include { BWA_MAP_FILTER             } from '../../../modules/local/bwa/map_filter'
+include { BWAMEM2_MAP_FILTER         } from '../../../modules/local/bwamem2/map_filter'
 include { GATK4_MARKDUPLICATES       } from '../../../modules/nf-core/gatk4/markduplicates'
 include { PRETEXTMAP                 } from '../../../modules/nf-core/pretextmap'
 include { PRETEXTSNAPSHOT            } from '../../../modules/nf-core/pretextsnapshot'
@@ -28,8 +28,6 @@ workflow MAP_HIC {
     ch_reference    // channel: [ meta, fasta, fai, index ]
 
     main:
-
-    ch_versions = Channel.empty()
 
     //
     // MODULE: Run fastp
@@ -51,15 +49,14 @@ workflow MAP_HIC {
         .set { ch_to_map }
 
     // Map reads with BWA:
-    BWA_MAP_FILTER (
+    BWAMEM2_MAP_FILTER (
         ch_to_map.reads,
         ch_to_map.index,
         params.mapq_filter
     )
-    ch_versions = ch_versions.mix(BWA_MAP_FILTER.out.versions.first())
 
     // group entries by sample:
-    BWA_MAP_FILTER.out.bam
+    BWAMEM2_MAP_FILTER.out.bam
         .map { meta, bam ->
             def new_meta = [
                 id: meta.sample,
@@ -92,7 +89,6 @@ workflow MAP_HIC {
         ch_to_dedup.fasta,
         ch_to_dedup.fai
     )
-    ch_versions = ch_versions.mix(GATK4_MARKDUPLICATES.out.versions.first())
 
     // join bam files and the corresponding index files: 
     GATK4_MARKDUPLICATES.out.bam
@@ -114,15 +110,14 @@ workflow MAP_HIC {
         ch_bam_bai.map { meta, bam, bai -> [ meta, bam ] },
         [ [:], [], [] ]
     )
-    ch_versions = ch_versions.mix(PRETEXTMAP.out.versions.first())
 
     //
     // MODULE: Run pretextsnapshot
     //
     PRETEXTSNAPSHOT (
         PRETEXTMAP.out.pretext
+            .map { meta, pretext -> [ meta, pretext, [] ] }
     )
-    ch_versions = ch_versions.mix(PRETEXTSNAPSHOT.out.versions.first())
 
     // combine bam files with fasta reference and fasta index:
     ch_to_yahs = ch_bam_bai
@@ -147,5 +142,4 @@ workflow MAP_HIC {
     emit:
     bam_bai  = ch_bam_bai                 // channel: [ val(meta), path(bam), path(bai) ]
     pretext  = PRETEXTMAP.out.pretext     // channel: [ val(meta), path(pretext) ]
-    versions = ch_versions                // channel: [ versions.yml ]
 }

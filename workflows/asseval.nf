@@ -5,13 +5,12 @@
 */
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { QUAST                  } from '../modules/nf-core/quast'
-include { BUSCO_BUSCO            } from '../modules/nf-core/busco/busco'
 include { WINDOWS_STATS          } from '../modules/local/windows_stats'
 include { PLOT_WINDOWS           } from '../modules/local/plot_windows'
 include { GENERATE_EAR           } from '../modules/local/generate_ear'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { PREPARE_GENOMES        } from '../subworkflows/local/prepare_genomes'
+include { RUN_EVALUATION         } from '../subworkflows/local/run_evaluation'
 include { RUN_KMER_FK            } from '../subworkflows/local/run_kmer_fk'
 include { MAPPABILITY            } from '../subworkflows/local/mappability'
 include { MAP_HIC                } from '../subworkflows/local/map_hic'
@@ -19,6 +18,7 @@ include { MAP_LONGREADS          } from '../subworkflows/local/map_longreads'
 include { MAP_ILLUMINA           } from '../subworkflows/local/map_illumina'
 include { BAM_STATS              } from '../subworkflows/local/bam_stats'
 include { BAM_DEPTH              } from '../subworkflows/local/bam_depth'
+include { RUN_BLOB               } from '../subworkflows/local/run_blob'
 include { VARIANT_CALLING        } from '../subworkflows/local/variant_calling'
 include { VARIANT_CALLING_GATK   } from '../subworkflows/local/variant_calling_gatk'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -59,6 +59,7 @@ workflow ASSEVAL {
         .map { meta, fasta, fai, dict, gtf, index -> [ meta, fasta, fai ] }
 
     if (steps.contains('qc')) {
+
         //
         // MODULE: Run FastQC
         //
@@ -70,32 +71,17 @@ workflow ASSEVAL {
 
     if (steps.contains('evaluation')) {
 
-        def busco_lineages_dir = file(params.busco_lineages_path, type: 'dir', checkIfExists: true)
-
-        // Group assemblies by type
-        ch_by_type = ch_assemblies
-            .map { meta, fasta, gtf, yaml ->
-                [ [comp: 'by_type', id: meta.type, type: meta.type], [ meta.id, fasta ] ]
-            }
-            .groupTuple(sort: { a, b -> a[0] <=> b[0] })
-            .map { meta, tuples -> [ meta + [labels: tuples.collect { it[0] }], tuples.collect { it[1] } ] }
-
-        // Group assemblies by sample
-        ch_by_sample = ch_assemblies
-            .map { meta, fasta, gtf, yaml ->
-                [ [comp: 'by_sample', id: meta.sample, sample: meta.sample], [ meta.id, fasta ] ]
-            }
-            .groupTuple(sort: { a, b -> a[0] <=> b[0] })
-            .map { meta, tuples -> [ meta + [labels: tuples.collect { it[0] }], tuples.collect { it[1] } ] }
-
         //
-        // MODULE: Run quast
-        //
-        QUAST (
-            ch_by_type.mix(ch_by_sample),
-            [ [:], [] ],
-            [ [:], [] ]
+        // SUBWORKFLOW: run_evaluation
+        //   
+        RUN_EVALUATION (
+            ch_assemblies.map { meta, fasta, gtf, yaml -> [ meta, fasta ] },
+            params.busco_lineage,
+            file(params.busco_lineages_path, type: 'dir', checkIfExists: true)
         )
+    }
+
+    if (steps.contains('kmer')) {
 
         //
         // SUBWORKFLOW: run_kmer_fk
@@ -105,18 +91,6 @@ workflow ASSEVAL {
             ch_fasta_fai,
             ch_kmers,
             params.kmer_size
-        )
-
-        //
-        // MODULE: Run busco
-        //
-        BUSCO_BUSCO (
-            ch_assemblies.map { meta, fasta, gtf, yaml -> [ meta, fasta ] },
-            "genome",
-            params.busco_lineage,
-            busco_lineages_dir,
-            [],
-            true
         )
     }
 
@@ -151,7 +125,6 @@ workflow ASSEVAL {
             ch_reads_bytype.longreads,
             ch_fasta_fai
         )
-        ch_versions = ch_versions.mix(MAP_LONGREADS.out.versions)
 
         //
         // SUBWORKFLOW: map_hic
@@ -161,7 +134,6 @@ workflow ASSEVAL {
             PREPARE_GENOMES.out.genomes
                 .map { meta, fasta, fai, dict, gtf, index -> [ meta, fasta, fai, index ] }
         )
-        ch_versions = ch_versions.mix(MAP_HIC.out.versions)
 
         //
         // SUBWORKFLOW: map_illumina
@@ -171,9 +143,8 @@ workflow ASSEVAL {
             PREPARE_GENOMES.out.genomes
                 .map { meta, fasta, fai, dict, gtf, index -> [ meta, fasta, fai, index ] }
         )
-        ch_versions = ch_versions.mix(MAP_ILLUMINA.out.versions)
 
-        // Combine bam files with reference
+        // Mix all bam files back together
         ch_bam_bai = MAP_LONGREADS.out.bam_bai
             .mix(MAP_HIC.out.bam_bai)
             .mix(MAP_ILLUMINA.out.bam_bai)
@@ -198,6 +169,15 @@ workflow ASSEVAL {
             ch_bam_bai
         )
         ch_versions = ch_versions.mix(BAM_DEPTH.out.versions)
+
+        //
+        // SUBWORKFLOW: run_blob
+        //   
+        RUN_BLOB (
+            ch_assemblies.map { meta, fasta, gtf, yaml -> [ meta, fasta ] },
+            RUN_EVALUATION.out.busco_full_table,
+            ch_bam_bai.filter { meta, bam, bai -> meta.type == 'hifi' || meta.type == 'illumina' }
+        )
     }
 
     if (steps.contains('variant_calling')) {

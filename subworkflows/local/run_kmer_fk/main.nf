@@ -20,6 +20,7 @@ include { SMUDGEPLOT                 } from '../../../modules/local/smudgeplot'
 */
 
 workflow RUN_KMER_FK {
+
     take:
     ch_reads      // channel: [ meta, fastq ]
     ch_fasta_fai  // channel: [ meta, fasta, fai ]
@@ -103,4 +104,5 @@ workflow RUN_KMER_FK {
     summary = GENESCOPEFK.out.summary       // channel: [ meta, summary ]
     stats = MERQURYFK_MERQURYFK.out.stats   // channel: [ meta, stats ]
     qv = MERQURYFK_MERQURYFK.out.qv         // channel: [ meta, qv ]
+    report = SMUDGEPLOT.out.report          // channel: [ meta, report ]
 }

@@ -10,7 +10,7 @@
 
 include { SAMTOOLS_FAIDX             } from '../../../modules/nf-core/samtools/faidx'
 include { SAMTOOLS_DICT              } from '../../../modules/nf-core/samtools/dict'
-include { BWA_INDEX                  } from '../../../modules/nf-core/bwa/index'
+include { BWAMEM2_INDEX              } from '../../../modules/nf-core/bwamem2/index'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,12 +83,12 @@ workflow PREPARE_GENOMES {
     //
     // MODULE: Run BWA index
     //
-    BWA_INDEX (
+    BWAMEM2_INDEX (
         ch_to_index
     )
 
     genomes = ch_genomes
-        .join(BWA_INDEX.out.index, failOnDuplicate: true, remainder: true)
+        .join(BWAMEM2_INDEX.out.index, failOnDuplicate: true, remainder: true)
 
     emit:
     genomes                       // channel: [ val(meta), path(fasta), path(fai), path(dict), path(gtf), path(index) ]

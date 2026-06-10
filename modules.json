@@ -5,6 +5,34 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "blobtk/create": {
+                        "branch": "master",
+                        "git_sha": "82f099dea43620d4d9a80b9d7014731d173f28a2",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "blobtk/depth": {
+                        "branch": "master",
+                        "git_sha": "afe7137ce04ae44c379341ae8223c65ea579c300",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "blobtk/plot": {
+                        "branch": "master",
+                        "git_sha": "82f099dea43620d4d9a80b9d7014731d173f28a2",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
+                    "blobtk/snail": {
+                        "branch": "master",
+                        "git_sha": "82f099dea43620d4d9a80b9d7014731d173f28a2",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
                     "busco/busco": {
                         "branch": "master",
                         "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
@@ -168,7 +196,7 @@
                     },
                     "gfastats": {
                         "branch": "master",
-                        "git_sha": "81880787133db07d9b4c1febd152c090eb8325dc",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
@@ -246,14 +274,14 @@
                     },
                     "pretextmap": {
                         "branch": "master",
-                        "git_sha": "c33544de5b4568632b33fcfba2bcc2766a3adefc",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
                     },
                     "pretextsnapshot": {
                         "branch": "master",
-                        "git_sha": "494f582bc477231c235ccdecd01c940a439d70e5",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]
