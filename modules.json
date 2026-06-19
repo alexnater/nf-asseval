@@ -35,7 +35,7 @@
                     },
                     "busco/busco": {
                         "branch": "master",
-                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
+                        "git_sha": "c65517224900fbc03611170224ee63fa16287d83",
                         "installed_by": [
                             "modules"
                         ]

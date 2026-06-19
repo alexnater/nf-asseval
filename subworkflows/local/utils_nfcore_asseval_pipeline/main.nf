@@ -102,13 +102,12 @@ workflow PIPELINE_INITIALISATION {
     //
     // Create channel from input file provided through params.assemblies
     //
-    channel
+    ch_assemblies = channel
         .fromList(samplesheetToList(assemblies, "${projectDir}/assets/schema_assemblies.json"))
         .map { meta, fasta, gtf, yaml ->
-            def id = "${meta.sample}_${meta.type}"
+            def id = "${meta.sample}_${meta.type}_${meta.status}"
             [ meta + [id: id], fasta, gtf, yaml ]
         }
-        .set { ch_assemblies }
 
     //
     // Create channel from input files provided through params.reads

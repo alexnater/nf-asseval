@@ -25,7 +25,7 @@ workflow MAP_LONGREADS {
     main:
 
     // Group by sample and combine reads with references
-    ch_reads
+    ch_input = ch_reads
         .map { meta, fastqs ->
             def new_meta = [
                 id: meta.sample,
@@ -41,7 +41,6 @@ workflow MAP_LONGREADS {
             fastq: [ meta.target + [ref: meta2.id], fastq ]
             ref:   [ meta2, fasta ]
         }
-        .set { ch_input }
 
     //
     // MODULE: Run minimap2

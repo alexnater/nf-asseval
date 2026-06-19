@@ -75,6 +75,39 @@ workflow RUN_KMER_FK {
         ch_fastk.map { meta, ktab, data, hist, txt -> [ meta, txt ] }
     )
 
+    // Combine haplotypes by sample and status:
+    ch_paired = ch_fasta_fai
+        .filter { meta, fasta, fai -> meta.type =~ /pri/ || meta.type =~ /hap1/ }
+        .map { meta, fasta, fai -> [ [meta.sample, meta.status], meta, fasta ] }
+        .join(
+            ch_fasta_fai
+                .filter { meta, fasta, fai -> meta.type =~ /alt/ || meta.type =~ /hap2/ }
+                .map { meta, fasta, fai -> [ [meta.sample, meta.status], meta, fasta ] },
+            failOnDuplicate: true,
+            remainder: true
+        )
+        .map { refid, meta, fasta, meta2, fasta2 ->
+            [ meta.sample, [hap1: meta.id, hap2: meta2.id, status: meta.status], fasta, fasta2 ]
+        }
+
+    // Combine fastk ktabs with reference file
+    ch_to_merqury = ch_fastk
+        .map { meta, ktab, data, hist, txt -> [ meta.sample, meta, ktab, data, hist, txt ] }
+        .combine(ch_paired, by: 0)
+        .map { sample, meta, ktab, data, hist, txt, meta2, fasta, fasta2 ->
+            [ meta + [hap1: meta2.hap1, hap2: meta2.hap2, status: meta2.status], hist, ktab, data, fasta, fasta2 ]
+        }
+
+    //
+    // MODULE: Run merqury
+    //
+    MERQURYFK_MERQURYFK (
+        ch_to_merqury,
+        [[:], [], []],
+        [[:], [], []]
+    )
+
+/*
     // Combine fastk ktabs with reference file
     ch_to_merqury = ch_fastk
         .map { meta, ktab, data, hist, txt -> [ meta.sample, meta, ktab, data, hist, txt ] }
@@ -91,6 +124,7 @@ workflow RUN_KMER_FK {
         [[:], [], []],
         [[:], [], []]
     )
+*/
 
     //
     // MODULE: Run smudgeplot
@@ -101,8 +135,9 @@ workflow RUN_KMER_FK {
     )
 
     emit:
-    summary = GENESCOPEFK.out.summary       // channel: [ meta, summary ]
-    stats = MERQURYFK_MERQURYFK.out.stats   // channel: [ meta, stats ]
-    qv = MERQURYFK_MERQURYFK.out.qv         // channel: [ meta, qv ]
-    report = SMUDGEPLOT.out.report          // channel: [ meta, report ]
+    summary = GENESCOPEFK.out.summary         // channel: [ meta, summary ]
+    stats = MERQURYFK_MERQURYFK.out.stats     // channel: [ meta, stats ]
+    qv = MERQURYFK_MERQURYFK.out.qv           // channel: [ meta, qv ]
+    images = MERQURYFK_MERQURYFK.out.images   // channel: [ meta, png/pdf ]
+    report = SMUDGEPLOT.out.report            // channel: [ meta, report ]
 }

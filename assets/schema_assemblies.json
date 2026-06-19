@@ -15,9 +15,15 @@
             },
             "type": {
                 "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Type of assembly (primary, alt, hap1, hap2)",
+                "enum": ["primary", "alt", "hap1", "hap2", "other"],
+                "errorMessage": "Type of assembly (primary, alt, hap1, hap2, or other)",
                 "meta": ["type"]
+            },
+            "status": {
+                "type": "string",
+                "enum": ["contig", "scaffolded", "curated"],
+                "errorMessage": "Status of assembly (contig, scaffolded, or curated)",
+                "meta": ["status"]
             },
             "fasta": {
                 "type": "string",
@@ -41,6 +47,6 @@
                 "errorMessage": "YAML file cannot contain spaces and must have extension '.yaml' or '.yml'"
             }
         },
-        "required": ["sample", "type", "fasta"]
+        "required": ["sample", "type", "status", "fasta"]
     }
 }

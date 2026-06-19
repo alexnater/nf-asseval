@@ -1,0 +1,10 @@
+sample,type,status,fasta
+mHetGlaV3,primary,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/mHetGlaV3.primary.fa
+mHetGlaV3,primary,contig,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/mHetGlaV3.contig.fasta
+mHetGla4,primary,contig,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/mHetGla4.tor.6add52.bp.p_ctg.fa
+mHetGlaTor,primary,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/mHetGla.Tor.sm.fa
+BatSui,primary,contig,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/BatSui.pre.a4bm0l.bp.p_ctg.sm.fa
+Broad2012,primary,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/GCF_000247695.1_Broad2012.fa
+Kunamoto,primary,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/GCA_053883595.1_Kunamoto.fa
+Calico,primary,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/GCA_052151175.1_ASM5215117v1_Calico.fa
+Zhou2020,primary,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/references/GCA_014060925.1_Zhou2020.v1.7_hic_pac_genomic.fa

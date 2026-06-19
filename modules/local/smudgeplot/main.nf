@@ -17,7 +17,7 @@ process SMUDGEPLOT {
     tuple val(meta), path("*.tsv")            , emit: report
     tuple val(meta), path("*.png")            , emit: plots
     tuple val(meta), path("*.txt")            , emit: txt
-    tuple val("${task.process}"), val('smudgeplot'), eval('smudgeplot.py --version 2>&1 | sed "s/^.*smudgeplot //"'), emit: versions_smudgeplot, topic: versions
+    tuple val("${task.process}"), val('smudgeplot'), eval('smudgeplot --version 2>&1 | sed "s/^.*smudgeplot //"'), emit: versions_smudgeplot, topic: versions
 
     when:
     task.ext.when == null || task.ext.when

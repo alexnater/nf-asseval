@@ -29,7 +29,7 @@ workflow BAM_STATS {
     ch_versions = Channel.empty()
 
     // Combine bam files with their reference
-    ch_bam_bai
+    ch_mapped = ch_bam_bai
         .map { meta, bam, bai -> [ meta.ref, meta, bam, bai ] }
         .combine(ch_fasta_fai.map { meta, fasta, fai ->
             [ meta.id, meta, fasta, fai ]
@@ -39,7 +39,6 @@ workflow BAM_STATS {
             bam_bai: [ meta, bam, bai ]
             fasta:   [ meta2, fasta ]
         }
-        .set { ch_mapped }
 
     // run SAMtools flagstat per merged bam file:
     SAMTOOLS_FLAGSTAT(ch_mapped.bam_bai)
@@ -61,7 +60,7 @@ workflow BAM_STATS {
     ch_versions = ch_versions.mix(PANDEPTH.out.versions.first())
 
     // Summarize all bam stats:
-    SAMTOOLS_FLAGSTAT.out.flagstat
+    ch_to_summary = SAMTOOLS_FLAGSTAT.out.flagstat
         .join(MOSDEPTH.out.summary_txt, failOnDuplicate:true, failOnMismatch:true)
         .join(MOSDEPTH.out.global_txt, failOnDuplicate:true, failOnMismatch:true)
         .map { meta, stat, depth, cov ->
@@ -73,7 +72,6 @@ workflow BAM_STATS {
             [ groupKey(new_meta, meta.samples_per_type), stat, depth, cov, 0, 0 ]
           }
         .groupTuple(sort: true)
-        .set { ch_to_summary }
 
     SUMMARIZE_STATS(ch_to_summary)
     ch_versions = ch_versions.mix(SUMMARIZE_STATS.out.versions)

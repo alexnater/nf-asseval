@@ -35,8 +35,8 @@
                     "type": "string",
                     "description": "Steps to run.",
                     "fa_icon": "fas fa-toolbox",
-                    "help_text": "Multiple steps separated with commas. Possible values: qc, evaluation, kmer, mappability, mapping, stats, variant_calling, report",
-                    "pattern": "^((qc|evaluation|kmer|mappability|mapping|stats|variant_calling|report)?,?)*"
+                    "help_text": "Multiple steps separated with commas. Possible values: qc, evaluation, kmer, mappability, mapping, stats, variant_calling, report, ear",
+                    "pattern": "^((qc|evaluation|kmer|mappability|mapping|stats|variant_calling|report|ear)?,?)*"
                 },
                 "kmers": {
                     "type": "string",
@@ -164,6 +164,12 @@
                     "type": "string",
                     "format": "directory-path",
                     "description": "The path to directory containing a config file for GLnexus."
+                },
+                "ear_yaml": {
+                    "type": "string",
+                    "format": "file-path",
+                    "pattern": "^\\S+\\.yaml$",
+                    "description": "The path to the YAML template file for ERGA Assembly reports."
                 }
             }
         },

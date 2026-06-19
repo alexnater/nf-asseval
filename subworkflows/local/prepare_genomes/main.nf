@@ -20,7 +20,7 @@ include { BWAMEM2_INDEX              } from '../../../modules/nf-core/bwamem2/in
 
 workflow PREPARE_GENOMES {
     take:
-    ch_assemblies        // channel (mandatory): [ val(meta), path(fasta), path(gtf), path(yaml) ]
+    ch_assemblies        // channel (mandatory): [ val(meta), path(fasta), path(gtf) ]
     ch_reads             // channel (mandatory): [ val(meta), path(fastqs) ]
 
     main:
@@ -39,8 +39,9 @@ workflow PREPARE_GENOMES {
     // MODULE: Run samtools faidx
     //
     SAMTOOLS_FAIDX (
-        ch_to_faidx.no_fai,
-        [[:], []]
+        ch_to_faidx.no_fai
+            .map { meta, fasta -> [ meta, fasta, [] ]},
+        false
     )
 
     // Check if fasta dict is already present:
