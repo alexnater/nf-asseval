@@ -25,6 +25,13 @@
                 "errorMessage": "Status of assembly (contig, scaffolded, or curated)",
                 "meta": ["status"]
             },
+            "genome_size": {
+                "type": "integer",
+                "description": "Estimated genome size for NGx calculations",
+                "minimum": 0,
+                "maximum": 1000000000000,
+                "meta": ["genome_size"]
+            },
             "fasta": {
                 "type": "string",
                 "format": "file-path",

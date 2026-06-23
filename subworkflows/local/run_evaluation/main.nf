@@ -28,6 +28,27 @@ workflow RUN_EVALUATION {
 
     main:
 
+    // Prepare channel with estimated genome sizes:
+    ch_to_gfastats = ch_fasta
+        .multiMap { meta, fasta ->
+            fasta: [ meta, fasta ]
+            gsize: meta.genome_size ?: null
+        }
+
+    //
+    // MODULE: Run gfastats
+    //
+    GFASTATS (
+        ch_to_gfastats.fasta,
+        false,
+        ch_to_gfastats.gsize,
+        [],
+        [ [:], [] ],
+        [ [:], [] ],
+        [ [:], [] ],
+        [ [:], [] ]
+    )
+
     // Group assemblies by type
     ch_by_type = ch_fasta
         .map { meta, fasta ->
@@ -43,20 +64,6 @@ workflow RUN_EVALUATION {
         }
         .groupTuple(sort: { a, b -> a[0] <=> b[0] })
         .map { meta, tuples -> [ meta + [labels: tuples.collect { it[0] }], tuples.collect { it[1] } ] }
-
-    //
-    // MODULE: Run gfastats
-    //
-    GFASTATS (
-        ch_fasta,
-        false,
-        [],
-        [],
-        [ [:], [] ],
-        [ [:], [] ],
-        [ [:], [] ],
-        [ [:], [] ]
-    )
 
     //
     // MODULE: Run quast
@@ -91,4 +98,5 @@ workflow RUN_EVALUATION {
     assembly_summary = GFASTATS.out.assembly_summary         // channel: [ meta, summary ]
     busco_summary = BUSCO_BUSCO.out.short_summaries_txt      // channel: [ meta, summary ]
     busco_full_table = BUSCO_BUSCO.out.full_table            // channel: [ meta, table ]
+    snail_plot = BLOBTOOLS_SNAIL.out.snail                   // channel: [ meta, snail ] 
 }

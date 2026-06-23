@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import re
 from pathlib import Path
 import logging
 import csv
@@ -88,18 +89,73 @@ def main(argv=None):
 
     with open(args.template, 'r') as inhandle:
         data = yaml.safe_load(inhandle)
+        logger.info(data)
+
+    fn_pattern = re.compile('(hifi|ul|hic)\\.hap(1|2)\\.txt')
+
+    depth_folder = args.contig if args.contig else args.curated
+    depths = {}
+    for fn in Path(depth_folder).glob('*.txt'):
+        if m := re.search(fn_pattern, str(fn)):
+            seqtype = m.group(1)
+            hidx = int(m.group(2)) - 1
+            if not seqtype in depths:
+                depths[seqtype] = [0., 0.]
+            depths[seqtype][hidx] = read_mosdepth(fn)
+
+    logger.info(f"Depths for assembly: hifi: {depths.get('hifi', 0)}, ONT UL: {depths.get('ul', 0)}, HiC: {depths.get('hic', 0)}.")
+
+    data_list = []
+    if 'hifi' in depths:
+        data_list.append(f"PacBio HiFi: {depths['hifi']:.2f}x")
+    if 'ul' in depths:
+        data_list.append(f"ONT UL: {depths['ul']:.2f}x")
+    if 'hic' in depths:
+        data_list.append(f"HiC: {depths['hic']:.2f}x")
+    data['DATA'] = data_list
 
     if args.contig:
-        hifi1 = read_mosdepth(Path(args.contig, 'hifi.hap1.txt'))
-        hifi2 = read_mosdepth(Path(args.contig, 'hifi.hap2.txt'))
-        ul1 = read_mosdepth(Path(args.contig, 'ul.hap1.txt'))
-        ul2 = read_mosdepth(Path(args.contig, 'ul.hap2.txt'))
-        hic1 = read_mosdepth(Path(args.contig, 'hic.hap1.txt'))
-        hic2 = read_mosdepth(Path(args.contig, 'hic.hap2.txt'))
-        logger.info(f"Depth for contig-level assembly: {hifi1}, {hifi2}, {ul1}, {ul2}, {hic1}, {hic2}.")
+        contig_depth = {}
+        for fn in Path(args.contig).glob('*.txt'):
+            if m := re.search(fn_pattern, str(fn)):
+                seqtype = m.group(1)
+                hidx = int(m.group(2)) - 1
+                if not seqtype in contig_depth:
+                    contig_depth[seqtype] = [0., 0.]
+                contig_depth[seqtype][hidx] = read_mosdepth(fn)
+
+        logger.info(f"Depths for contig-level assembly: hifi: {contig_depth.get('hifi', 0)}, ONT UL: {contig_depth.get('ul', 0)}, HiC: {contig_depth.get('hic', 0)}.")
+
+    if args.scaffolded:
+        scaffolded_depth = {}
+        for fn in Path(args.scaffolded).glob('*.txt'):
+            if m := re.search(fn_pattern, str(fn)):
+                seqtype = m.group(1)
+                hidx = int(m.group(2)) - 1
+                if not seqtype in scaffolded_depth:
+                    scaffolded_depth[seqtype] = [0., 0.]
+                scaffolded_depth[seqtype][hidx] = read_mosdepth(fn)
+
+        logger.info(f"Depths for scaffolded assembly: hifi: {scaffolded_depth.get('hifi', 0)}, ONT UL: {scaffolded_depth.get('ul', 0)}, HiC: {scaffolded_depth.get('hic', 0)}.")
+
+    if args.curated:
+        curated_depth = {}
+        for fn in Path(args.curated).glob('*.txt'):
+            if m := re.search(fn_pattern, str(fn)):
+                seqtype = m.group(1)
+                hidx = int(m.group(2)) - 1
+                if not seqtype in curated_depth:
+                    curated_depth[seqtype] = [0., 0.]
+                curated_depth[seqtype][hidx] = read_mosdepth(fn)
+
+        logger.info(f"Depths for curated assembly: hifi: {curated_depth.get('hifi', 0)}, ONT UL: {curated_depth.get('ul', 0)}, HiC: {curated_depth.get('hic', 0)}.")
+
+    data['PROFILING']['GenomeScope'] = str(args.genomescope)
+    if args.smudgeplot:
+        data['PROFILING']['Smudgeplot'] = str(args.smudgeplot)
 
     with open(args.outfile, 'w') as outhandle:
-       yaml.safe_dump(data)
+        print(yaml.safe_dump(data, default_flow_style=False, sort_keys=False), file=outhandle)
 
 
 if __name__ == "__main__":

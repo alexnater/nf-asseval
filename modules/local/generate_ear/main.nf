@@ -10,11 +10,11 @@ process GENERATE_EAR {
     input:
     tuple val(meta) , path(template)
     tuple val(meta2), path(genomescope, stageAs: "data/kmer/*"), path(smudgeplot, stageAs: "data/kmer/*")
-    tuple val(meta3), path('data/contig/merqury/*'), path('data/contig/busco.hap1.txt'), path('data/contig/busco.hap2.txt'), path('data/contig/blob.hap1.svg'), path('data/contig/blob.hap2.svg')
+    tuple val(meta3), path('data/contig/merqury/*'), path('data/contig/busco.hap1.txt'), path('data/contig/busco.hap2.txt'), path('data/contig/snail.hap1.svg'), path('data/contig/snail.hap2.svg'), path('data/contig/blob.hap1.svg'), path('data/contig/blob.hap2.svg'), path('data/contig/pretext.hap1.png'), path('data/contig/pretext.hap2.png')
     tuple val(meta4), path('data/contig/hifi.hap1.txt'), path('data/contig/hifi.hap2.txt'), path('data/contig/ul.hap1.txt'), path('data/contig/ul.hap2.txt'), path('data/contig/hic.hap1.txt'), path('data/contig/hic.hap2.txt')
-    tuple val(meta5), path('data/scaffolded/merqury/*'), path('data/scaffolded/busco.hap1.txt'), path('data/scaffolded/busco.hap2.txt'), path('data/scaffolded/blob.hap1.svg'), path('data/scaffolded/blob.hap2.svg')
+    tuple val(meta5), path('data/scaffolded/merqury/*'), path('data/scaffolded/busco.hap1.txt'), path('data/scaffolded/busco.hap2.txt'), path('data/scaffolded/snail.hap1.svg'), path('data/scaffolded/snail.hap2.svg'), path('data/scaffolded/blob.hap1.svg'), path('data/scaffolded/blob.hap2.svg'), path('data/scaffolded/pretext.hap1.png'), path('data/scaffolded/pretext.hap2.png')
     tuple val(meta6), path('data/scaffolded/hifi.hap1.txt'), path('data/scaffolded/hifi.hap2.txt'), path('data/scaffolded/ul.hap1.txt'), path('data/scaffolded/ul.hap2.txt'), path('data/scaffolded/hic.hap1.txt'), path('data/scaffolded/hic.hap2.txt')
-    tuple val(meta7), path('data/curated/merqury/*'), path('data/curated/busco.hap1.txt'), path('data/curated/busco.hap2.txt'), path('data/curated/blob.hap1.svg'), path('data/curated/blob.hap2.svg')
+    tuple val(meta7), path('data/curated/merqury/*'), path('data/curated/busco.hap1.txt'), path('data/curated/busco.hap2.txt'), path('data/curated/snail.hap1.svg'), path('data/curated/snail.hap2.svg'), path('data/curated/blob.hap1.svg'), path('data/curated/blob.hap2.svg'), path('data/curated/pretext.hap1.png'), path('data/curated/pretext.hap2.png')
     tuple val(meta8), path('data/curated/hifi.hap1.txt'), path('data/curated/hifi.hap2.txt'), path('data/curated/ul.hap1.txt'), path('data/curated/ul.hap2.txt'), path('data/curated/hic.hap1.txt'), path('data/curated/hic.hap2.txt')
 
     output:

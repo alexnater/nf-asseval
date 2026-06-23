@@ -30,6 +30,7 @@ process BLOBTOOLS_COMBINED {
 
     """
     blobtools create \\
+        --threads $task.cpus \\
         --fasta ${fasta} \\
         $busco_arg \\
         $hits_arg \\

@@ -1,7 +1,7 @@
-sample,type,status,fasta
-Pup3-NMR,primary,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_corrected/manual_edits/renamed_090226/mHetGla1.1.pri.cleaned.fa
-Pup3-NMR,alt,curated,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_corrected/manual_edits/renamed_090226/mHetGla1.1.alt.cleaned.fa
-Pup3-NMR,hap1,scaffolded,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_old/Pup3-NMR.hap1.curated.reordered.fa
-Pup3-NMR,hap2,scaffolded,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_old/Pup3-NMR.hap2.curated.reordered.fa
-Pup3-NMR,primary,contig,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/busco/input/mHetGla1.1.pri.contigs.corr.fa
-Pup3-NMR,alt,contig,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/busco/input/mHetGla1.1.alt.contigs.corr.fa
+sample,type,status,genome_size,fasta
+Pup3-NMR,primary,curated,2600000000,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_corrected/manual_edits/renamed_090226/mHetGla1.1.pri.cleaned.fa
+Pup3-NMR,alt,curated,2600000000,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_corrected/manual_edits/renamed_090226/mHetGla1.1.alt.cleaned.fa
+Pup3-NMR,hap1,scaffolded,2600000000,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_old/Pup3-NMR.hap1.curated.reordered.fa
+Pup3-NMR,hap2,scaffolded,2600000000,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/assemblies/hifiasm/Pup3-NMR_unfiltered_triobinned_k31/hic_scaffolding_old/Pup3-NMR.hap2.curated.reordered.fa
+Pup3-NMR,primary,contig,2600000000,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/busco/input/mHetGla1.1.pri.contigs.corr.fa
+Pup3-NMR,alt,contig,2600000000,/data/projects/p2024-0022_naked_mole_rat_genome_assembly/downstream_analyses/busco/input/mHetGla1.1.alt.contigs.corr.fa

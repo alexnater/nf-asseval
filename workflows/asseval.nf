@@ -7,7 +7,6 @@ include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { WINDOWS_STATS          } from '../modules/local/windows_stats'
 include { PLOT_WINDOWS           } from '../modules/local/plot_windows'
-include { GENERATE_EAR           } from '../modules/local/generate_ear'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { PREPARE_GENOMES        } from '../subworkflows/local/prepare_genomes'
 include { RUN_EVALUATION         } from '../subworkflows/local/run_evaluation'
@@ -21,6 +20,7 @@ include { BAM_DEPTH              } from '../subworkflows/local/bam_depth'
 include { RUN_BLOB               } from '../subworkflows/local/run_blob'
 include { VARIANT_CALLING        } from '../subworkflows/local/variant_calling'
 include { VARIANT_CALLING_GATK   } from '../subworkflows/local/variant_calling_gatk'
+include { PREPARE_EAR            } from '../subworkflows/local/prepare_ear'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_asseval_pipeline'
@@ -260,6 +260,30 @@ workflow ASSEVAL {
 
         def ear_yaml = file(params.ear_yaml, checkIfExists: true)
 
+        ch_evaluation = RUN_EVALUATION.out.busco_summary
+            .join(RUN_EVALUATION.out.snail_plot, failOnDuplicate: true, failOnMismatch: true)
+            .join(RUN_BLOB.out.blob, failOnDuplicate: true, failOnMismatch: true)
+
+        ch_kmer = RUN_KMER_FK.out.summary
+            .join(RUN_KMER_FK.out.report, failOnDuplicate: true, failOnMismatch: true)
+
+        ch_merqury = RUN_KMER_FK.out.stats
+            .join(RUN_KMER_FK.out.qv, failOnDuplicate: true, failOnMismatch: true)
+            .join(RUN_KMER_FK.out.images, failOnDuplicate: true, failOnMismatch: true)
+
+        //
+        // SUBWORKFLOW: generate_ear
+        //
+        PREPARE_EAR (
+            ch_evaluation,
+            MAP_HIC.out.snapshot,
+            ch_kmer,
+            ch_merqury,
+            BAM_STATS.out.depth,
+            ear_yaml
+        )
+
+/*
         ch_depth_stats = BAM_STATS.out.depth
             .map { meta, depth -> [ [id: meta.ref, sample: meta.sample], [ meta.type, depth ] ] }
             .groupTuple()
@@ -282,22 +306,23 @@ workflow ASSEVAL {
 
         // Add depth output to Busco and branch by haplotype:
         ch_by_type = RUN_EVALUATION.out.busco_summary
+            .join(RUN_EVALUATION.out.snail_plot, failOnDuplicate: true, failOnMismatch: true)
             .join(RUN_BLOB.out.blob, failOnDuplicate: true, failOnMismatch: true)
-            .map { meta, busco, blob -> [ meta.subMap(['id', 'sample']), meta, busco, blob ] }
+            .map { meta, busco, snail, blob -> [ meta.subMap(['id', 'sample']), meta, busco, snail, blob ] }
             .join(ch_depth_stats, failOnDuplicate: true, remainder: true)
-            .branch { key, meta, busco, blob, hifi, ul, hic ->
+            .branch { key, meta, busco, snail, blob, hifi, ul, hic ->
                 hap1: meta.type =~ /primary/ || meta.type =~ /hap1/
-                    return [ meta.subMap(['sample', 'status']), busco, blob, hifi, ul, hic ]  
+                    return [ meta.subMap(['sample', 'status']), busco, snail, blob, hifi, ul, hic ]  
                 hap2: meta.type =~ /alt/ || meta.type =~ /hap2/
-                    return [ meta.subMap(['sample', 'status']), busco, blob, hifi, ul, hic ]
+                    return [ meta.subMap(['sample', 'status']), busco, snail, blob, hifi, ul, hic ]
             }
         
         // Join haplotype pairs with merqury output:
         ch_paired = ch_by_type.hap1
             .join(ch_by_type.hap2, failOnDuplicate: true, remainder: true)
             .join(ch_merqury, failOnDuplicate: true, failOnMismatch: true)
-            .map { meta, busco, blob, hifi, ul, hic, busco2, blob2, hifi2, ul2, hic2, merqury ->
-                [ meta + [id: "${meta.sample}_${meta.status}"], [ merqury, busco, busco2, blob, blob2, hifi, hifi2, ul, ul2, hic, hic2 ] ]
+            .map { meta, busco, snail, blob, hifi, ul, hic, busco2, snail2, blob2, hifi2, ul2, hic2, merqury ->
+                [ meta + [id: "${meta.sample}_${meta.status}"], [ merqury, busco, busco2, snail, snail2, blob, blob2, hifi, hifi2, ul, ul2, hic, hic2 ] ]
             }
 
         // Join different assembly stages:
@@ -316,12 +341,12 @@ workflow ASSEVAL {
             .multiMap { sample, contig, scaffolded, curated, summary, smudge ->
                 yaml:          [ [id: sample], ear_yaml ]
                 summary:       [ [id: sample], summary, smudge ]
-                contig_stats:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[0..4]
-                contig_depth:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[5..-1]
-                scaff_stats:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[0..4]
-                scaff_depth:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[5..-1]
-                curated_stats: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[0..4]
-                curated_depth: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[5..-1]
+                contig_stats:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[0..6]
+                contig_depth:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[7..-1]
+                scaff_stats:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[0..6]
+                scaff_depth:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[7..-1]
+                curated_stats: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[0..6]
+                curated_depth: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[7..-1]
             }
 
         //
@@ -337,6 +362,7 @@ workflow ASSEVAL {
             ch_to_ear.curated_stats,
             ch_to_ear.curated_depth
         )
+*/
 
     }
 

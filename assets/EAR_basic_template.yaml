@@ -44,7 +44,7 @@ ASSEMBLIES:
       hic_FullMap_png: <Insert pretext FullMap.png full path>  # also can be a HiC full contact map PNG from higlass
       hic_FullMap_link: <Insert .pretext file web link>  # also can be a web folder with .mcool from higlass
       blobplot_cont_png: <Insert blobplot contamination .png file full path>
-    <Insert haplotype>:  # Only if hap2 is available. Otherwise remove the <Insert another haplotype> section
+    <Insert another haplotype>:  # Only if hap2 is available. Otherwise remove the <Insert another haplotype> section
       gfastats--nstar-report_txt: <Insert gfastats--nstar-report.txt full path>
       busco_short_summary_txt: <Insert busco_short_summary.txt full path>
       merqury_folder: <Insert Merqury results folder path>

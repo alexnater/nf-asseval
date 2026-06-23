@@ -140,6 +140,7 @@ workflow MAP_HIC {
     )
 
     emit:
-    bam_bai  = ch_bam_bai                 // channel: [ val(meta), path(bam), path(bai) ]
-    pretext  = PRETEXTMAP.out.pretext     // channel: [ val(meta), path(pretext) ]
+    bam_bai  = ch_bam_bai                     // channel: [ val(meta), path(bam), path(bai) ]
+    pretext  = PRETEXTMAP.out.pretext         // channel: [ val(meta), path(pretext) ]
+    snapshot = PRETEXTSNAPSHOT.out.image      // channel: [ val(meta), path(snapshot) ]
 }
