@@ -162,8 +162,8 @@
                 },
                 "glnexus_config": {
                     "type": "string",
-                    "format": "directory-path",
-                    "description": "The path to directory containing a config file for GLnexus."
+                    "format": "file-path",
+                    "description": "The path to the YAML config file for GLnexus."
                 },
                 "ear_yaml": {
                     "type": "string",

@@ -15,8 +15,8 @@
             },
             "type": {
                 "type": "string",
-                "enum": ["primary", "alt", "hap1", "hap2", "other"],
-                "errorMessage": "Type of assembly (primary, alt, hap1, hap2, or other)",
+                "enum": ["primary", "pri", "alt", "hap1", "hap2", "other"],
+                "errorMessage": "Type of assembly (primary, pri, alt, hap1, hap2, or other)",
                 "meta": ["type"]
             },
             "status": {
