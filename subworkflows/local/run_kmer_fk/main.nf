@@ -139,5 +139,5 @@ workflow RUN_KMER_FK {
     stats = MERQURYFK_MERQURYFK.out.stats     // channel: [ meta, stats ]
     qv = MERQURYFK_MERQURYFK.out.qv           // channel: [ meta, qv ]
     images = MERQURYFK_MERQURYFK.out.images   // channel: [ meta, png/pdf ]
-    report = SMUDGEPLOT.out.report            // channel: [ meta, report ]
+    report = SMUDGEPLOT.out.tsv               // channel: [ meta, tsv ]
 }

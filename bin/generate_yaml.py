@@ -105,54 +105,44 @@ def main(argv=None):
 
     logger.info(f"Depths for assembly: hifi: {depths.get('hifi', 0)}, ONT UL: {depths.get('ul', 0)}, HiC: {depths.get('hic', 0)}.")
 
-    data_list = []
+    data['DATA'] = []
     if 'hifi' in depths:
-        data_list.append(f"PacBio HiFi: {depths['hifi']:.2f}x")
+        data['DATA'].append(f"PacBio HiFi: {depths['hifi']:.2f}x")
     if 'ul' in depths:
-        data_list.append(f"ONT UL: {depths['ul']:.2f}x")
+        data['DATA'].append(f"ONT UL: {depths['ul']:.2f}x")
     if 'hic' in depths:
-        data_list.append(f"HiC: {depths['hic']:.2f}x")
-    data['DATA'] = data_list
-
-    if args.contig:
-        contig_depth = {}
-        for fn in Path(args.contig).glob('*.txt'):
-            if m := re.search(fn_pattern, str(fn)):
-                seqtype = m.group(1)
-                hidx = int(m.group(2)) - 1
-                if not seqtype in contig_depth:
-                    contig_depth[seqtype] = [0., 0.]
-                contig_depth[seqtype][hidx] = read_mosdepth(fn)
-
-        logger.info(f"Depths for contig-level assembly: hifi: {contig_depth.get('hifi', 0)}, ONT UL: {contig_depth.get('ul', 0)}, HiC: {contig_depth.get('hic', 0)}.")
-
-    if args.scaffolded:
-        scaffolded_depth = {}
-        for fn in Path(args.scaffolded).glob('*.txt'):
-            if m := re.search(fn_pattern, str(fn)):
-                seqtype = m.group(1)
-                hidx = int(m.group(2)) - 1
-                if not seqtype in scaffolded_depth:
-                    scaffolded_depth[seqtype] = [0., 0.]
-                scaffolded_depth[seqtype][hidx] = read_mosdepth(fn)
-
-        logger.info(f"Depths for scaffolded assembly: hifi: {scaffolded_depth.get('hifi', 0)}, ONT UL: {scaffolded_depth.get('ul', 0)}, HiC: {scaffolded_depth.get('hic', 0)}.")
-
-    if args.curated:
-        curated_depth = {}
-        for fn in Path(args.curated).glob('*.txt'):
-            if m := re.search(fn_pattern, str(fn)):
-                seqtype = m.group(1)
-                hidx = int(m.group(2)) - 1
-                if not seqtype in curated_depth:
-                    curated_depth[seqtype] = [0., 0.]
-                curated_depth[seqtype][hidx] = read_mosdepth(fn)
-
-        logger.info(f"Depths for curated assembly: hifi: {curated_depth.get('hifi', 0)}, ONT UL: {curated_depth.get('ul', 0)}, HiC: {curated_depth.get('hic', 0)}.")
+        data['DATA'].append(f"HiC: {depths['hic']:.2f}x")
 
     data['PROFILING']['GenomeScope'] = str(args.genomescope)
     if args.smudgeplot:
         data['PROFILING']['Smudgeplot'] = str(args.smudgeplot)
+
+    if args.scaffolded:
+        hap1 = data['ASSEMBLIES']['Pre-curation']['hap1']
+        hap1['gfastats--nstar-report_txt'] = Path(args.scaffolded, 'stats.hap1.txt')
+        hap1['busco_short_summary_txt'] = Path(args.scaffolded, 'busco.hap1.txt')
+        hap1['merqury_folder'] = Path(args.scaffolded, 'merqury')
+
+        hap2 = data['ASSEMBLIES']['Pre-curation']['hap2']
+        hap2['gfastats--nstar-report_txt'] = Path(args.scaffolded, 'stats.hap2.txt')
+        hap2['busco_short_summary_txt'] = Path(args.scaffolded, 'busco.hap2.txt')
+        hap2['merqury_folder'] = Path(args.scaffolded, 'merqury')
+
+    if args.curated:
+        hap1 = data['ASSEMBLIES']['Curated']['hap1']
+        hap1['gfastats--nstar-report_txt'] = Path(args.curated, 'stats.hap1.txt')
+        hap1['busco_short_summary_txt'] = Path(args.curated, 'busco.hap1.txt')
+        hap1['merqury_folder'] = Path(args.curated, 'merqury')
+        hap1['hic_FullMap_png'] = Path(args.curated, 'hic.hap1.png')
+        hap1['blobplot_cont_png'] = Path(args.curated, 'blob.hap1.svg')
+
+        hap2 = data['ASSEMBLIES']['Curated']['hap2']
+        hap2['gfastats--nstar-report_txt'] = Path(args.curated, 'stats.hap2.txt')
+        hap2['busco_short_summary_txt'] = Path(args.curated, 'busco.hap2.txt')
+        hap2['merqury_folder'] = Path(args.curated, 'merqury')
+        hap2['hic_FullMap_png'] = Path(args.curated, 'hic.hap2.png')
+        hap2['blobplot_cont_png'] = Path(args.curated, 'blob.hap2.svg')
+
 
     with open(args.outfile, 'w') as outhandle:
         print(yaml.safe_dump(data, default_flow_style=False, sort_keys=False), file=outhandle)

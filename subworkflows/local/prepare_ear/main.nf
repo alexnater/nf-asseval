@@ -19,7 +19,7 @@ include { GENERATE_EAR               } from '../../../modules/local/generate_ear
 workflow PREPARE_EAR {
 
     take:
-    ch_evaluation          // channel: [ meta, busco, snail, blob ]
+    ch_evaluation          // channel: [ meta, stats, busco, snail, blob ]
     ch_hic                 // channel: [ meta, snapshot ]
     ch_kmer                // channel: [ meta, genomescope, smudge ]
     ch_merqury             // channel: [ meta, stats, qv, img ]
@@ -50,14 +50,14 @@ workflow PREPARE_EAR {
 
     // Add depth output to Busco and branch by haplotype:
     ch_by_type = ch_evaluation
-        .map { meta, busco, snail, blob -> [ meta.subMap(['id', 'sample']), meta, busco, snail, blob ] }
+        .map { meta, stats, busco, snail, blob -> [ meta.subMap(['id', 'sample']), meta, stats, busco, snail, blob ] }
         .join(ch_snapshot, failOnDuplicate: true, remainder: true)
         .join(ch_depth_stats, failOnDuplicate: true, remainder: true)
-        .branch { key, meta, busco, snail, blob, snapshot, hifi, ul, hic ->
+        .branch { key, meta, stats, busco, snail, blob, snapshot, hifi, ul, hic ->
             hap1: meta.type =~ /primary/ || meta.type =~ /hap1/
-                return [ meta.subMap(['sample', 'status']), [ busco, snail, blob, snapshot, hifi, ul, hic ] ]  
+                return [ meta.subMap(['sample', 'status']), [ stats, busco, snail, blob, snapshot, hifi, ul, hic ] ]  
             hap2: meta.type =~ /alt/ || meta.type =~ /hap2/
-                return [ meta.subMap(['sample', 'status']), [ busco, snail, blob, snapshot, hifi, ul, hic ] ]
+                return [ meta.subMap(['sample', 'status']), [ stats, busco, snail, blob, snapshot, hifi, ul, hic ] ]
         }
     
     // Join haplotype pairs with merqury output:
@@ -76,7 +76,7 @@ workflow PREPARE_EAR {
             def contig = tuples.find { it[0] == 'contig'}
             def scaffolded = tuples.find { it[0] == 'scaffolded'}
             def curated = tuples.find { it[0] == 'curated'}
-            [ sample, contig ? contig[1] : [[]] * 15, scaffolded ? scaffolded[1] : [[]] * 15, curated ? curated[1] : [[]] * 15 ]
+            [ sample, contig ? contig[1] : [[]] * 17, scaffolded ? scaffolded[1] : [[]] * 17, curated ? curated[1] : [[]] * 17 ]
         }
 
     ch_to_ear = ch_by_stage
@@ -84,12 +84,12 @@ workflow PREPARE_EAR {
         .multiMap { sample, contig, scaffolded, curated, summary, smudge ->
             yaml:          [ [id: sample], ear_yaml ]
             summary:       [ [id: sample], summary, smudge ]
-            contig_stats:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[0..8]
-            contig_depth:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[9..-1]
-            scaff_stats:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[0..8]
-            scaff_depth:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[9..-1]
-            curated_stats: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[0..8]
-            curated_depth: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[9..-1]
+            contig_stats:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[0..10]
+            contig_depth:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[11..-1]
+            scaff_stats:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[0..10]
+            scaff_depth:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[11..-1]
+            curated_stats: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[0..10]
+            curated_depth: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[11..-1]
         }
 
     //

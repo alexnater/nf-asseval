@@ -14,9 +14,10 @@ process SMUDGEPLOT {
     output:
     tuple val(meta), path("*.smu")            , emit: smu
     tuple val(meta), path("*.sma")            , emit: sma
-    tuple val(meta), path("*.tsv")            , emit: report
+    tuple val(meta), path("*.tsv")            , emit: tsv
     tuple val(meta), path("*.png")            , emit: plots
     tuple val(meta), path("*.txt")            , emit: txt
+    tuple val(meta), path("*.json")           , emit: json, optional: true
     tuple val("${task.process}"), val('smudgeplot'), eval('smudgeplot --version 2>&1 | sed "s/^.*smudgeplot //"'), emit: versions_smudgeplot, topic: versions
 
     when:
@@ -60,5 +61,6 @@ process SMUDGEPLOT {
     touch ${prefix}_centralities.png
     touch ${prefix}_smudgeplot.png
     touch ${prefix}_smudgeplot_log10.png
+    touch ${prefix}_smudgeplot_report.json
     """
 }

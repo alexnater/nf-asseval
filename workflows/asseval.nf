@@ -260,7 +260,8 @@ workflow ASSEVAL {
 
         def ear_yaml = file(params.ear_yaml, checkIfExists: true)
 
-        ch_evaluation = RUN_EVALUATION.out.busco_summary
+        ch_evaluation = RUN_EVALUATION.out.assembly_summary
+            .join(RUN_EVALUATION.out.busco_summary, failOnDuplicate: true, failOnMismatch: true)
             .join(RUN_EVALUATION.out.snail_plot, failOnDuplicate: true, failOnMismatch: true)
             .join(RUN_BLOB.out.blob, failOnDuplicate: true, failOnMismatch: true)
 
@@ -282,88 +283,6 @@ workflow ASSEVAL {
             BAM_STATS.out.depth,
             ear_yaml
         )
-
-/*
-        ch_depth_stats = BAM_STATS.out.depth
-            .map { meta, depth -> [ [id: meta.ref, sample: meta.sample], [ meta.type, depth ] ] }
-            .groupTuple()
-            .map { meta, tuples ->
-                def hifi = tuples.find {it[0] == 'hifi'}
-                def ul = tuples.find {it[0] == 'ul'}
-                def hic = tuples.find {it[0] == 'hic'}
-                [ meta, hifi ? hifi[1] : [], ul ? ul[1] : [], hic ? hic[1] : [] ]
-            }
-
-        ch_kmer_stats = RUN_KMER_FK.out.summary
-            .join(RUN_KMER_FK.out.report, failOnDuplicate: true, failOnMismatch: true)
-            .filter { meta, summary, report -> meta.type == 'hifi' }
-            .map { meta, summary, report -> [ meta.sample, summary, report ] }
-
-        ch_merqury = RUN_KMER_FK.out.stats
-            .join(RUN_KMER_FK.out.qv, failOnDuplicate: true, failOnMismatch: true)
-            .join(RUN_KMER_FK.out.images, failOnDuplicate: true, failOnMismatch: true)
-            .map { meta, stats, qv, img -> [ meta.subMap(['sample', 'status']), [ stats, qv, img ].flatten() ] }
-
-        // Add depth output to Busco and branch by haplotype:
-        ch_by_type = RUN_EVALUATION.out.busco_summary
-            .join(RUN_EVALUATION.out.snail_plot, failOnDuplicate: true, failOnMismatch: true)
-            .join(RUN_BLOB.out.blob, failOnDuplicate: true, failOnMismatch: true)
-            .map { meta, busco, snail, blob -> [ meta.subMap(['id', 'sample']), meta, busco, snail, blob ] }
-            .join(ch_depth_stats, failOnDuplicate: true, remainder: true)
-            .branch { key, meta, busco, snail, blob, hifi, ul, hic ->
-                hap1: meta.type =~ /primary/ || meta.type =~ /hap1/
-                    return [ meta.subMap(['sample', 'status']), busco, snail, blob, hifi, ul, hic ]  
-                hap2: meta.type =~ /alt/ || meta.type =~ /hap2/
-                    return [ meta.subMap(['sample', 'status']), busco, snail, blob, hifi, ul, hic ]
-            }
-        
-        // Join haplotype pairs with merqury output:
-        ch_paired = ch_by_type.hap1
-            .join(ch_by_type.hap2, failOnDuplicate: true, remainder: true)
-            .join(ch_merqury, failOnDuplicate: true, failOnMismatch: true)
-            .map { meta, busco, snail, blob, hifi, ul, hic, busco2, snail2, blob2, hifi2, ul2, hic2, merqury ->
-                [ meta + [id: "${meta.sample}_${meta.status}"], [ merqury, busco, busco2, snail, snail2, blob, blob2, hifi, hifi2, ul, ul2, hic, hic2 ] ]
-            }
-
-        // Join different assembly stages:
-        ch_by_stage = ch_paired
-            .map { meta, data -> [ meta.sample, [ meta.status, data ] ] }
-            .groupTuple()
-            .map { sample, tuples ->
-                def contig = tuples.find { it[0] == 'contig'}
-                def scaffolded = tuples.find { it[0] == 'scaffolded'}
-                def curated = tuples.find { it[0] == 'curated'}
-                [ sample, contig ? contig[1] : [], scaffolded ? scaffolded[1] : [], curated ? curated[1] : [] ]
-            }
-
-        ch_to_ear = ch_by_stage
-            .join(ch_kmer_stats, failOnDuplicate: true, remainder: true)
-            .multiMap { sample, contig, scaffolded, curated, summary, smudge ->
-                yaml:          [ [id: sample], ear_yaml ]
-                summary:       [ [id: sample], summary, smudge ]
-                contig_stats:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[0..6]
-                contig_depth:  [ [id: "${sample}_contig",     sample: sample, status: 'contig'] ]     + contig[7..-1]
-                scaff_stats:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[0..6]
-                scaff_depth:   [ [id: "${sample}_scaffolded", sample: sample, status: 'scaffolded'] ] + scaffolded[7..-1]
-                curated_stats: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[0..6]
-                curated_depth: [ [id: "${sample}_curated",    sample: sample, status: 'curated'] ]    + curated[7..-1]
-            }
-
-        //
-        // MODULE: generate_ear
-        //
-        GENERATE_EAR (
-            ch_to_ear.yaml,
-            ch_to_ear.summary,
-            ch_to_ear.contig_stats,
-            ch_to_ear.contig_depth,
-            ch_to_ear.scaff_stats,
-            ch_to_ear.scaff_depth,
-            ch_to_ear.curated_stats,
-            ch_to_ear.curated_depth
-        )
-*/
-
     }
 
     //
