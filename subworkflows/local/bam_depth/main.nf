@@ -22,7 +22,7 @@ workflow BAM_DEPTH {
     ch_bam_bai        // channel (mandatory): [ val(meta), path(bam), path(bai) ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Run SAMtools depth over all merged bam files per reference genome:
     ch_bam_bai

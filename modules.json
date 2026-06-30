@@ -70,7 +70,7 @@
                     },
                     "deeptools/bamcoverage": {
                         "branch": "master",
-                        "git_sha": "f045f9e2d406a8ea87fff4fa1bb5c1071a38f458",
+                        "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
                         "installed_by": [
                             "modules"
                         ]

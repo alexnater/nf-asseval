@@ -26,7 +26,7 @@ workflow BAM_STATS {
     bed_file       // file (ptional)
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Combine bam files with their reference
     ch_mapped = ch_bam_bai

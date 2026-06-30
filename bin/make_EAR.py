@@ -104,9 +104,10 @@ def make_report(yaml_file):
             for file_path in file_paths:
                 with open(file_path, 'r') as file:
                     lines = file.readlines()
-                    if len(lines) > order and (len(lines) == 1 or lines[2].split('\t')[0].strip() == "Both"):
+                    lines.pop(0)
+                    if len(lines) > order and (len(lines) == 1 or lines[2].split('\t')[0].strip() == "both"):
                         target_line = lines[order]
-                        fourth_column_value = target_line.split('\t')[3]
+                        fourth_column_value = target_line.split('\t')[4]
                         return fourth_column_value
         except Exception as e:
             logging.error(f"Error reading {dir_path}: {str(e)}")
@@ -120,6 +121,7 @@ def make_report(yaml_file):
             for file_path in file_paths:
                 with open(file_path, 'r') as file:
                     lines = file.readlines()
+                    lines.pop(0)
                     if len(lines) > order:
                         target_line = lines[order]
                         fifth_column_value = target_line.split('\t')[4].strip()

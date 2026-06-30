@@ -4,8 +4,8 @@ process GENERATE_EAR {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b1/b1dd9a5353bf5b3d502c6ea059b88c0378d57985142e45d40304897f8f43b8e3/data'
-        : 'community.wave.seqera.io/library/python_pip_pyyaml_argparse:d26cead1d8e9b0cb'}"
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/f7/f7ec8c17e029643429167435fc60f397671ca74d9e460cf7fb076ccabb1c9560/data'
+        : 'community.wave.seqera.io/library/python_pytz_pyyaml_reportlab_requests:690727fa834208c1'}"
 
     input:
     tuple val(meta) , path(template)
@@ -14,7 +14,7 @@ process GENERATE_EAR {
     tuple val(meta4), path('data/contig/hifi.hap1.txt'), path('data/contig/hifi.hap2.txt'), path('data/contig/ul.hap1.txt'), path('data/contig/ul.hap2.txt'), path('data/contig/hic.hap1.txt'), path('data/contig/hic.hap2.txt')
     tuple val(meta5), path('data/scaffolded/merqury/*'), path('data/scaffolded/stats.hap1.txt'), path('data/scaffolded/stats.hap2.txt'), path('data/scaffolded/busco.hap1.txt'), path('data/scaffolded/busco.hap2.txt'), path('data/scaffolded/snail.hap1.svg'), path('data/scaffolded/snail.hap2.svg'), path('data/scaffolded/blob.hap1.svg'), path('data/scaffolded/blob.hap2.svg'), path('data/scaffolded/pretext.hap1.png'), path('data/scaffolded/pretext.hap2.png')
     tuple val(meta6), path('data/scaffolded/hifi.hap1.txt'), path('data/scaffolded/hifi.hap2.txt'), path('data/scaffolded/ul.hap1.txt'), path('data/scaffolded/ul.hap2.txt'), path('data/scaffolded/hic.hap1.txt'), path('data/scaffolded/hic.hap2.txt')
-    tuple val(meta7), path('data/curated/merqury/*'), path('data/contig/curated.hap1.txt'), path('data/contig/curated.hap2.txt'), path('data/curated/busco.hap1.txt'), path('data/curated/busco.hap2.txt'), path('data/curated/snail.hap1.svg'), path('data/curated/snail.hap2.svg'), path('data/curated/blob.hap1.svg'), path('data/curated/blob.hap2.svg'), path('data/curated/pretext.hap1.png'), path('data/curated/pretext.hap2.png')
+    tuple val(meta7), path('data/curated/merqury/*'), path('data/curated/stats.hap1.txt'), path('data/curated/stats.hap2.txt'), path('data/curated/busco.hap1.txt'), path('data/curated/busco.hap2.txt'), path('data/curated/snail.hap1.svg'), path('data/curated/snail.hap2.svg'), path('data/curated/blob.hap1.svg'), path('data/curated/blob.hap2.svg'), path('data/curated/pretext.hap1.png'), path('data/curated/pretext.hap2.png')
     tuple val(meta8), path('data/curated/hifi.hap1.txt'), path('data/curated/hifi.hap2.txt'), path('data/curated/ul.hap1.txt'), path('data/curated/ul.hap2.txt'), path('data/curated/hic.hap1.txt'), path('data/curated/hic.hap2.txt')
 
     output:

@@ -107,41 +107,48 @@ def main(argv=None):
 
     data['DATA'] = []
     if 'hifi' in depths:
-        data['DATA'].append(f"PacBio HiFi: {depths['hifi']:.2f}x")
+        data['DATA'].append({'PacBio HiFi': f"{depths['hifi'][0]:.2f}x"})
     if 'ul' in depths:
-        data['DATA'].append(f"ONT UL: {depths['ul']:.2f}x")
+        data['DATA'].append({'ONT UL': f"{depths['ul'][0]:.2f}x"})
     if 'hic' in depths:
-        data['DATA'].append(f"HiC: {depths['hic']:.2f}x")
+        data['DATA'].append({'HiC': f"{depths['hic'][0]:.2f}x"})
 
-    data['PROFILING']['GenomeScope'] = str(args.genomescope)
+    data['PROFILING']['GenomeScope']['genomescope_summary_txt'] = str(args.genomescope)
     if args.smudgeplot:
-        data['PROFILING']['Smudgeplot'] = str(args.smudgeplot)
+        data['PROFILING']['Smudgeplot']['smudgeplot_verbose_summary_txt'] = str(args.smudgeplot)
+    else:
+        data['PROFILING']['Smudgeplot']['smudgeplot_verbose_summary_txt'] = ""
 
     if args.scaffolded:
-        hap1 = data['ASSEMBLIES']['Pre-curation']['hap1']
-        hap1['gfastats--nstar-report_txt'] = Path(args.scaffolded, 'stats.hap1.txt')
-        hap1['busco_short_summary_txt'] = Path(args.scaffolded, 'busco.hap1.txt')
-        hap1['merqury_folder'] = Path(args.scaffolded, 'merqury')
+        del data['ASSEMBLIES']['Pre-curation']['<Insert haplotype>']
+        hap1 = data['ASSEMBLIES']['Pre-curation']['hap1'] = {}
+        hap1['gfastats--nstar-report_txt'] = str(Path(args.scaffolded, 'stats.hap1.txt'))
+        hap1['busco_short_summary_txt'] = str(Path(args.scaffolded, 'busco.hap1.txt'))
+        hap1['merqury_folder'] = str(Path(args.scaffolded, 'merqury'))
 
-        hap2 = data['ASSEMBLIES']['Pre-curation']['hap2']
-        hap2['gfastats--nstar-report_txt'] = Path(args.scaffolded, 'stats.hap2.txt')
-        hap2['busco_short_summary_txt'] = Path(args.scaffolded, 'busco.hap2.txt')
-        hap2['merqury_folder'] = Path(args.scaffolded, 'merqury')
+        del data['ASSEMBLIES']['Pre-curation']['<Insert another haplotype>']
+        hap2 = data['ASSEMBLIES']['Pre-curation']['hap2'] = {}
+        hap2['gfastats--nstar-report_txt'] = str(Path(args.scaffolded, 'stats.hap2.txt'))
+        hap2['busco_short_summary_txt'] = str(Path(args.scaffolded, 'busco.hap2.txt'))
+        hap2['merqury_folder'] = str(Path(args.scaffolded, 'merqury'))
 
     if args.curated:
+        del data['ASSEMBLIES']['Curated']['<Insert haplotype>']
+        data['ASSEMBLIES']['Curated']['hap1'] = {}
         hap1 = data['ASSEMBLIES']['Curated']['hap1']
-        hap1['gfastats--nstar-report_txt'] = Path(args.curated, 'stats.hap1.txt')
-        hap1['busco_short_summary_txt'] = Path(args.curated, 'busco.hap1.txt')
-        hap1['merqury_folder'] = Path(args.curated, 'merqury')
-        hap1['hic_FullMap_png'] = Path(args.curated, 'hic.hap1.png')
-        hap1['blobplot_cont_png'] = Path(args.curated, 'blob.hap1.svg')
+        hap1['gfastats--nstar-report_txt'] = str(Path(args.curated, 'stats.hap1.txt'))
+        hap1['busco_short_summary_txt'] = str(Path(args.curated, 'busco.hap1.txt'))
+        hap1['merqury_folder'] = str(Path(args.curated, 'merqury'))
+        hap1['hic_FullMap_png'] = str(Path(args.curated, 'hic.hap1.png'))
+        hap1['blobplot_cont_png'] = str(Path(args.curated, 'blob.hap1.svg'))
 
-        hap2 = data['ASSEMBLIES']['Curated']['hap2']
-        hap2['gfastats--nstar-report_txt'] = Path(args.curated, 'stats.hap2.txt')
-        hap2['busco_short_summary_txt'] = Path(args.curated, 'busco.hap2.txt')
-        hap2['merqury_folder'] = Path(args.curated, 'merqury')
-        hap2['hic_FullMap_png'] = Path(args.curated, 'hic.hap2.png')
-        hap2['blobplot_cont_png'] = Path(args.curated, 'blob.hap2.svg')
+        del data['ASSEMBLIES']['Curated']['<Insert another haplotype>']
+        hap2 = data['ASSEMBLIES']['Curated']['hap2'] = {}
+        hap2['gfastats--nstar-report_txt'] = str(Path(args.curated, 'stats.hap2.txt'))
+        hap2['busco_short_summary_txt'] = str(Path(args.curated, 'busco.hap2.txt'))
+        hap2['merqury_folder'] = str(Path(args.curated, 'merqury'))
+        hap2['hic_FullMap_png'] = str(Path(args.curated, 'hic.hap2.png'))
+        hap2['blobplot_cont_png'] = str(Path(args.curated, 'blob.hap2.svg'))
 
 
     with open(args.outfile, 'w') as outhandle:
