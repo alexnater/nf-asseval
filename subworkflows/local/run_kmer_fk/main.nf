@@ -75,20 +75,24 @@ workflow RUN_KMER_FK {
         ch_fastk.map { meta, ktab, data, hist, txt -> [ meta, txt ] }
     )
 
+    // Separate assemblies by type:
+    ch_by_type = ch_fasta_fai
+        .branch { meta, fasta, fai ->
+            hap1: meta.type =~ /pri/ || meta.type =~ /hap1/
+                return [ meta.subMap(['sample', 'status']), meta, fasta ]  
+            hap2: meta.type =~ /alt/ || meta.type =~ /hap2/
+                return [ meta.subMap(['sample', 'status']), meta, fasta ]
+            other: true
+                return [ meta.sample, meta + [hap1: meta.id, hap2: null, status: meta.status], fasta, [] ]
+        }
+
     // Combine haplotypes by sample and status:
-    ch_paired = ch_fasta_fai
-        .filter { meta, fasta, fai -> meta.type =~ /pri/ || meta.type =~ /hap1/ }
-        .map { meta, fasta, fai -> [ [meta.sample, meta.status], meta, fasta ] }
-        .join(
-            ch_fasta_fai
-                .filter { meta, fasta, fai -> meta.type =~ /alt/ || meta.type =~ /hap2/ }
-                .map { meta, fasta, fai -> [ [meta.sample, meta.status], meta, fasta ] },
-            failOnDuplicate: true,
-            remainder: true
-        )
+    ch_paired = ch_by_type.hap1
+        .join(ch_by_type.hap2, failOnDuplicate: true, remainder: true)
         .map { refid, meta, fasta, meta2, fasta2 ->
             [ meta.sample, [hap1: meta.id, hap2: meta2.id, status: meta.status], fasta, fasta2 ]
         }
+        .mix(ch_by_type.other)
 
     // Combine fastk ktabs with reference file
     ch_to_merqury = ch_fastk

@@ -54,7 +54,7 @@ workflow PREPARE_EAR {
         .join(ch_snapshot, failOnDuplicate: true, remainder: true)
         .join(ch_depth_stats, failOnDuplicate: true, remainder: true)
         .branch { key, meta, stats, busco, snail, blob, snapshot, hifi, ul, hic ->
-            hap1: meta.type =~ /primary/ || meta.type =~ /hap1/
+            hap1: meta.type =~ /pri/ || meta.type =~ /hap1/
                 return [ meta.subMap(['sample', 'status']), [ stats, busco, snail, blob, snapshot, hifi, ul, hic ] ]  
             hap2: meta.type =~ /alt/ || meta.type =~ /hap2/
                 return [ meta.subMap(['sample', 'status']), [ stats, busco, snail, blob, snapshot, hifi, ul, hic ] ]
