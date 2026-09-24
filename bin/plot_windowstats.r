@@ -20,7 +20,8 @@ opt <- parse_args(opt_parser, args=args)
 
 data <- read.table(opt$bed, header=TRUE, sep="\t", comment.char="")
 colnames(data) <- sub("^X\\.?", "", colnames(data))
-samples <- colnames(data)[9:11]
+nsamples <- (ncol(data) - 8) / 4
+samples <- colnames(data)[9:(9+nsamples-1)]
 samples <- sub("_.*$", "", samples)
 
 pdf(file=opt$outfile, width=12, height=9)

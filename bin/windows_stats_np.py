@@ -4,73 +4,38 @@ import sys
 import argparse
 import logging
 import csv
-import array as arr
+import numpy as np
 from pathlib import Path
 from collections import Counter
 from pysam import VariantFile
-from divlib import Region, Depth
-from divlib import get_sample_info, get_sequence, get_samples_from_depth_file, read_depth_array, get_regions
+from divlib.region import Region, get_regions
+from divlib.depth import Depth, read_depth, get_samples_from_depth_file
+from divlib.heterozygosity import Hets, read_vcf, read_vcf_single
+from divlib.fasta import get_sequence
 
 logger = logging.getLogger()
-
-
-class VariantSite:
-    def __init__(
-            self,
-            chrom: str,
-            pos: int,
-            qual: float,
-            samples: list[str],
-            depths: list[int],
-            gqs: list[int],
-            alleles: list[int],
-            phased: list[int]):
-        self.chrom = chrom
-        self.pos = pos
-        self.qual = qual
-        self.depths = arr.array('L', depths) if depths is not None else arr.array('H', [0] * len(samples))
-        self.gqs = arr.array('H', gqs) if gqs is not None else arr.array('H', [0] * len(samples))
-        self.alleles = arr.array('b', alleles) if alleles is not None else arr.array('b', [-1] * 2 * len(samples))
-        self.phased = arr.array('b', phased) if phased is not None else arr.array('b', [False] * len(samples))
-
-    def set_individual(
-            self,
-            sidx: int,
-            qual: int,
-            depth: int,
-            gq: int,
-            alleles: tuple[int,int],
-            phased: bool):
-        if sidx >= len(self.depths):
-            raise Exception("Sample index out of bounds")
-        self.qual = qual if self.qual is None or qual < self.qual else self.qual
-        self.depths[sidx] = depth
-        self.gqs[sidx] = gq
-        self.alleles[2*sidx] = alleles[0]
-        self.alleles[2*sidx+1] = alleles[1]
-        self.phased[sidx] = phased
 
 
 def calculate_window_stats(
         region: Region,
         depths: Depth,
-        variants: dict[str,VariantSite],
+        hets: Hets,
         refseq: str,
         windowsize: int,
         stepsize: int,
         mindepth: int,
-        mingq: int,
         total_dp: list[float]
-        ) -> "tuple[arr.array,arr.array,arr.array,arr.array]":
+        ):
     cgcs, cats = 0., 0.
     winvalues = []
     winstart = region.start - 1
     while winstart < region.end:
         winend = winstart + windowsize
         winend = winend if winend < region.end else region.end
+        startpos = winstart + 1
         gc, gc_skew, at_skew = float('nan'), float('nan'), float('nan')
         if not refseq is None:
-            seqstart = winstart - region.start + 1
+            seqstart = startpos - region.start
             seqend = winend - region.start + 1
             counter = Counter(refseq[seqstart:seqend].upper())
             totvalid = (counter['A'] + counter['T'] + counter['G'] + counter['C'])
@@ -82,89 +47,43 @@ def calculate_window_stats(
             if (counter['A'] + counter['T']) > 0:
                 at_skew = (counter['A'] - counter['T']) / (counter['A'] + counter['T'])
                 cats += at_skew
-        nvalid = arr.array('L', [0] * depths.ncols)
-        covsums = arr.array('L', [0] * depths.ncols)
-        hetsums = arr.array('L', [0] * depths.ncols)
-        logger.info(f"Working on window {region.chrom}:{winstart+1}-{winend} ...")
-        for pos in range(winstart + 1, winend + 1):
-            valid_samples = [depth >= mindepth for depth in depths.get_position_row(pos)]
-            for sidx, is_valid in enumerate(valid_samples):
-                if is_valid:
-                    nvalid[sidx] += 1
-            if not pos in variants:
-                continue
-            alleles = (al for al in variants[pos].alleles)
-            hets = [ True if (is_valid and gq >= mingq and al1 >= 0 and al2 >= 0 and al1 != al2) else False \
-                    for al1, al2, gq, is_valid in zip(alleles, alleles, variants[pos].gqs, valid_samples) ]
-            for sidx, is_het in enumerate(hets):
-                if is_het:
-                    hetsums[sidx] += 1
-        for sidx in range(depths.ncols):
-            covsums[sidx] = depths.get_colsum(winstart + 1, winend + 1, sidx)
+        logger.info(f"Working on window {region.chrom}:{startpos}-{winend} ...")
+        nvalid = depths.get_nvalid_row(startpos, winend, mindepth)
+        covsums = depths.get_colsum_row(startpos, winend)
+        hetsums = hets.get_hetsum_row(startpos, winend)
         winvalues.append([region.chrom, winstart, winend, gc, gc_skew, cgcs, at_skew, cats, \
                           nvalid, hetsums, \
-                          (covsum / windowsize for covsum in covsums), \
-                          (covsum / (windowsize * total_dp[sidx]) for sidx, covsum in enumerate(covsums))])
+                          covsums / (winend - winstart), \
+                          covsums / (np.array(total_dp, dtype=np.float64) * (winend - winstart))])
         winstart += stepsize
     return winvalues
 
 
-def read_vcf(
+def read_vcf_full(
         vcf_file: Path,
+        depths: Depth,
         region: Region,
-        samples: list[str],
+        samples: list[str]=None,
+        mindepth: int=0,
         include_indels: bool=True,
         interval: int=1000
         ):
-    variants = {}
+    hets = np.zeros((region.length, len(samples)), dtype=np.bool)
     with VariantFile(str(vcf_file)) as vcf_in:
         samples = list(vcf_in.header.samples) if samples is None else samples
         if vcf_in.get_tid(region.chrom) < 0:
-            return samples, variants
+            return samples, hets
         processed = 0
         for rec in vcf_in.fetch(region.chrom, region.start-1, region.end):
-            depths = [rec.samples[sample]["DP"] if rec.samples[sample]["DP"] is not None else 0 for sample in samples]
-            gqs = [rec.samples[sample]["GQ"] if rec.samples[sample]["GQ"] is not None else 0 for sample in samples]
-            alleles = [al if al is not None else -1 for sample in samples for al in rec.samples[sample]["GT"]]
-            phased = [rec.samples[sample].phased for sample in samples]
+            valid_samples = [depth >= mindepth for depth in depths.get_position_row(rec.pos)]
+            alleles = (al if al is not None else -1 for sample in samples for al in rec.samples[sample]["GT"])
             if rec.rlen == 1 or (rec.rlen > 1 and include_indels):
-                variants[rec.pos] = VariantSite(rec.chrom, rec.pos, rec.qual, samples, depths, gqs, alleles, phased)
+                hets[rec.pos] = np.array([ True if (is_valid and al1 >= 0 and al2 >= 0 and al1 != al2) else False \
+                                        for al1, al2, is_valid in zip(alleles, alleles, valid_samples) ])
             processed += 1
             if not processed % interval: logger.info(f"Processed {processed} lines.")
         logger.info(f"Processed {processed} lines of VCF file {vcf_file}.")
-    return samples, variants
-
-def read_vcf_single(
-        vcf_files: list[Path],
-        region: Region,
-        samples: list[str],
-        include_indels: bool=True,
-        interval: int=1000
-        ):
-    sample_dict = {sample: sidx for sidx, sample in enumerate(samples)}
-    variants = {}
-    for vcf_file in vcf_files:
-        with VariantFile(str(vcf_file)) as vcf_in:
-            sample = list(vcf_in.header.samples)[0]
-            try:
-                sidx = sample_dict[sample]
-            except:
-                raise Exception(f"VCF sample id {sample} is not in list of sample names")
-            if vcf_in.get_tid(region.chrom) < 0: continue
-            processed = 0
-            for rec in vcf_in.fetch(region.chrom, region.start-1, region.end):
-                depth = rec.samples[sample]["DP"] if rec.samples[sample]["DP"] is not None else 0
-                gq = rec.samples[sample]["GQ"] if rec.samples[sample]["GQ"] is not None else 0
-                alleles = tuple(al if al is not None else -1 for al in rec.samples[sample]["GT"])
-                phased = rec.samples[sample].phased
-                if rec.rlen == 1 or (rec.rlen > 1 and include_indels):
-                    if not rec.pos in variants:
-                        variants[rec.pos] = VariantSite(rec.chrom, rec.pos, None, samples, None, None, None, None)
-                    variants[rec.pos].set_individual(sidx, rec.qual, depth, gq, alleles, phased)
-                processed += 1
-                if not processed % interval: logger.info(f"Processed {processed} lines.")
-            logger.info(f"Processed {processed} lines of VCF file {vcf_file}.")
-    return samples, variants
+    return samples, hets
 
 
 def read_mosdepth(infiles: list[Path]) -> tuple[dict, list, dict]:
@@ -202,7 +121,7 @@ def parse_args(argv=None):
     """Define and immediately parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Calculates windowwise corrected mean depth per sample by region.",
-        epilog="Example: python windows_stats.py depth.tsv out1 --samples sample1 sample2 sample3 --bed regions.bed --windowsize 10000 --stepsize 2000",
+        epilog="Example: python windows_stats.py --depth depth.tsv --vcf variants.vcf -o out1 --samples sample1 sample2 sample3 --bed regions.bed --windowsize 10000 --stepsize 2000",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
@@ -368,13 +287,13 @@ def main(argv=None):
                 refseq = None
             
             logger.info(f"Working on region {region} ...")
-            depths = read_depth_array(args.depth, region, samples, args.interval)
+            depths = read_depth(args.depth, region, samples, args.interval)
             if len(args.vcf) == 1:
-                _, variants = read_vcf(args.vcf[0], region, samples, args.include_indels, args.interval)
+                hets, _ = read_vcf(args.vcf[0], depths, region, samples, args.mindepth, args.mingq, args.include_indels, args.interval)
             else:
-                _, variants = read_vcf_single(args.vcf, region, samples, args.include_indels, args.interval)
-            winvalues = calculate_window_stats(region, depths, variants, refseq, args.windowsize, \
-                                            args.stepsize, args.mindepth, args.mingq, total_depth)
+                hets, _ = read_vcf_single(args.vcf, depths, region, samples, args.mindepth, args.mingq, args.include_indels, args.interval)
+            winvalues = calculate_window_stats(region, depths, hets, refseq, args.windowsize, \
+                                                args.stepsize, args.mindepth, total_depth)
             for chrom, start, end, gc, gc_skew, cgcs, at_skew, cats, valid, hets, dps_raw, dps_corr in winvalues:
                 print(chrom, str(start), str(end), f"{gc:.2f}", f"{gc_skew:.2f}", f"{cgcs:.2f}", f"{at_skew:.2f}", f"{cats:.2f}", \
                     "\t".join(f"{val}" for val in valid), "\t".join(f"{het}" for het in hets), \

@@ -38,18 +38,18 @@ workflow RUN_KMER_FK {
                 type: meta.type,
                 samples_per_type: meta.samples_per_type
             ]
-            [ meta.sample, new_meta, fastq ]
+            [ meta.subMap('sample', 'type'), new_meta, fastq ]
         }
-        .groupTuple(by: [0, 1])
+        .groupTuple()
         .join (
             ch_kmers
-                .filter { meta, db -> meta.type == 'fastk' && meta.kmer_size == kmer_size }
-                .map { meta, db -> [ meta.sample, db ] },
+                .filter { meta, db -> meta.tool == 'fastk' && meta.kmer_size == kmer_size }
+                .map { meta, db -> [ meta.subMap('sample', 'type'), db ] },
             failOnDuplicate: true,
             remainder: true
         )
-        .filter { sample, meta, fastqs, db -> !db }
-        .map { sample, meta, fastqs, db -> [ meta, fastqs.flatten() ] }
+        .filter { key, meta, fastqs, db -> !db }
+        .map { key, meta, fastqs, db -> [ meta, fastqs.flatten() ] }
     
     //
     // MODULE: Run fastk by sample

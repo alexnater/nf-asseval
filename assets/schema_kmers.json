@@ -16,8 +16,14 @@
             "type": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Type of k-mer database",
+                "errorMessage": "Technology of sequencing reads",
                 "meta": ["type"]
+            },
+            "tool": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Tool used to create k-mer database",
+                "meta": ["tool"]
             },
             "kmer_size": {
                 "type": "integer",

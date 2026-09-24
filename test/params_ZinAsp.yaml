@@ -1,0 +1,22 @@
+# General settings:
+#-----------------------
+project: "p2025-0061"
+outdir: "results_ZinAsp"
+custom_config_base: "/data/users/anater/nf-core-configs"
+
+# Sample details:
+#-----------------------
+assemblies: "/data/users/anater/pipelines/nf-core-asseval/test/assemblies_ZinAsp.csv"
+reads: "/data/users/anater/pipelines/nf-core-asseval/test/reads_hifi_ZinAsp.csv"
+
+# Workflow settings:
+#-----------------------
+steps: "evaluation,mappability,mapping,stats,variant_calling,report"
+kmer_size: 31
+busco_lineage: "actinopterygii_odb12.2"
+busco_lineages_path: "/data/projects/p2025-0061_conservation_genomics_of_zingel_asper/nobackup/nf-asseval/busco_downloads"
+mismatch_penalty: 4
+mapq_filter: 0
+min_coverage: 10
+glnexus_config: "/data/users/anater/pipelines/nf-core-asseval/assets/clair3.yml"
+publish_bam: false
