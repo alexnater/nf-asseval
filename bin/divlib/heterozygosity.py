@@ -136,6 +136,6 @@ def read_vcf_single(
                 processed += 1
                 if not processed % interval: logger.info(f"Processed {processed} lines.")
             logger.info(f"Processed {processed} lines of VCF file {vcf_file}.")
-            logger.info(f"Extracted {hets.npos}/{len(hets.pos)}/{hets.hets.shape[0]} variant sites from VCF file.")
+            logger.info(f"Extracted {hets.npos} variant sites from VCF file.")
     hets.sort_positions()
     return hets, samples
