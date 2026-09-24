@@ -3,9 +3,9 @@ process WINDOWS_STATS {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/pysam:0.23.0--py39hdd5828d_0' :
-        'quay.io/biocontainers/pysam:0.23.0--py39hdd5828d_0' }"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d4/d459c2a6af06632b91dc8e73d86f6b7bad18913e0482c40452767df3e3375004/data' :
+        'community.wave.seqera.io/library/pysam_numpy:beea5885b4c2cb2a' }"
 
     input:
     tuple val(meta), path(depth), path(dtbi), path(vcf), path(tbi), path(mosdepth)
@@ -14,7 +14,7 @@ process WINDOWS_STATS {
     output:
     tuple val(meta), path("*.summary.tsv"), emit: summary
     tuple val(meta), path("*.bed")        , emit: bed
-    path "versions.yml"                   , emit: versions
+    tuple val("${task.process}"), val('python'), eval("python --version | sed 's/Python //g'"), emit: versions_python, topic: versions
 
     script:
     def args = task.ext.args ?: ""
@@ -30,10 +30,5 @@ process WINDOWS_STATS {
         --fasta $fasta \\
         --fai $fai \\
         $args
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python: \$(python --version | sed 's/Python //g')
-    END_VERSIONS
     """
 }

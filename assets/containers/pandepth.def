@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: ubuntu:latest
+
+%post
+    apt-get -y update && apt-get -y upgrade
+    apt-get install -y \
+        build-essential \
+        libz-dev \
+        liblzma-dev \
+        libcurl4-openssl-dev \
+        libbz2-dev \
+        libgomp1 \
+        bzip2 \
+	wget \
+        rsync
+    apt-get clean && apt-get purge
+
+    PANDEPTH_VERSION="2.26"
+    
+    cd /opt
+    wget https://github.com/HuiyangYu/PanDepth/releases/download/v${PANDEPTH_VERSION}/PanDepth-${PANDEPTH_VERSION}-Linux-x86_64.tar.gz
+    tar xvzf PanDepth-${PANDEPTH_VERSION}-Linux-x86_64.tar.gz
+    rm PanDepth-${PANDEPTH_VERSION}-Linux-x86_64.tar.gz
+    cd PanDepth-${PANDEPTH_VERSION}-Linux-x86_64
+    mv pandepth /bin
+    cd /opt
+    rm -r PanDepth-${PANDEPTH_VERSION}-Linux-x86_64
+
+%environment

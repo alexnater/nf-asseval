@@ -6,5 +6,5 @@ results*/
 testing/
 testing*
 *.pyc
-assets/containers/
+assets/containers/*.sif
 null/
