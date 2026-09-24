@@ -45,12 +45,12 @@ class Hets():
             self.hets[self.npos,:] = hets
         self.npos += 1
 
-    def set_indiviudal(self, pos: int, sidx: int, het: bool=True):
+    def set_individual(self, pos: int, sidx: int, het: bool=True):
         if sidx >= self.hets.shape[1]:
             raise Exception("Sample index out of bounds!")
         if not pos in self.lookup:
             self.add_row(pos)
-        self.hets[pos, sidx] = het
+        self.hets[self.lookup[pos], sidx] = het
 
     def get_window(
             self,
@@ -101,7 +101,7 @@ def read_vcf(
             processed += 1
             if not processed % interval: logger.info(f"Processed {processed} lines.")
         logger.info(f"Processed {processed} lines of VCF file {vcf_file}.")
-        logger.info(f"Extracted {hets.npos}/{len(hets.pos)}/{hets.hets.shape[0]} variant sites from VCF file.")
+        logger.info(f"Extracted {hets.npos} variant sites from VCF file.")
     hets.shrink_to_size()
     return hets, samples
 

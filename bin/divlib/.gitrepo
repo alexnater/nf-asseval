@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@gitlab.bioinformatics.unibe.ch:anater/divlib.git
 	branch = main
-	commit = 685e00b3c8e80350553f42a0c755aeed991b915e
-	parent = a7cf877d687379816be7130eae2424402dd5b8bb
+	commit = 5c303727befad1407c97070c0af395f35f0bb201
+	parent = 51662138dfafa070c8f8740ff6015b66e7d99e3f
 	method = merge
 	cmdver = 0.4.9
