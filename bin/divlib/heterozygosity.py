@@ -129,7 +129,7 @@ def read_vcf_single(
             for rec in vcf_in.fetch(region.chrom, region.start-1, region.end):
                 is_valid = depths.is_valid(rec.pos, sidx, mindepth)
                 gq = rec.samples[sample]["GQ"] if rec.samples[sample]["GQ"] is not None else 0
-                alleles = (al if al is not None else -1 for al in rec.samples[sample]["GT"])
+                alleles = tuple(al if al is not None else -1 for al in rec.samples[sample]["GT"])
                 if rec.rlen == 1 or (rec.rlen > 1 and include_indels):
                     is_het = True if (is_valid and gq >= mingq and alleles[0] >= 0 and alleles[1] >= 0 and alleles[0] != alleles[1]) else False
                     hets.set_individual(rec.pos, sidx, is_het)
