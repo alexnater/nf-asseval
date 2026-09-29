@@ -12,7 +12,11 @@
                     ]
                 ],
                 "1": [
-                    "versions.yml:md5,d6331ea8e97541d1d439707fe3dd41b2"
+                    [
+                        "GATK4_COMBINEGVCFS",
+                        "gatk4",
+                        "4.7.0.0"
+                    ]
                 ],
                 "combined_gvcf": [
                     [
@@ -23,16 +27,20 @@
                         "test.combined.g.vcf.gz:md5,68b329da9893e34099c7d8ad5cb9c940"
                     ]
                 ],
-                "versions": [
-                    "versions.yml:md5,d6331ea8e97541d1d439707fe3dd41b2"
+                "versions_gatk4": [
+                    [
+                        "GATK4_COMBINEGVCFS",
+                        "gatk4",
+                        "4.7.0.0"
+                    ]
                 ]
             }
         ],
+        "timestamp": "2026-08-18T11:11:25.294445",
         "meta": {
-            "nf-test": "0.9.0",
-            "nextflow": "24.04.4"
-        },
-        "timestamp": "2024-09-20T10:35:25.18434"
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     },
     "test_gatk4_combinegvcfs": {
         "content": [
@@ -168,14 +176,20 @@
                 "chr22\t4606\t.\tT\t<NON_REF>\t.\t.\tEND=4607\tGT:DP:GQ:MIN_DP:PL\t./.:2:6:2:0,6,49",
                 "chr22\t4608\t.\tA\t<NON_REF>\t.\t.\tEND=40001\tGT:DP:GQ:MIN_DP:PL\t./.:0:0:0:0,0,0"
             ],
-            [
-                "versions.yml:md5,d6331ea8e97541d1d439707fe3dd41b2"
-            ]
+            {
+                "versions_gatk4": [
+                    [
+                        "GATK4_COMBINEGVCFS",
+                        "gatk4",
+                        "4.7.0.0"
+                    ]
+                ]
+            }
         ],
+        "timestamp": "2026-08-18T11:11:18.451736",
         "meta": {
-            "nf-test": "0.8.4",
-            "nextflow": "23.10.1"
-        },
-        "timestamp": "2024-03-20T15:41:25.316932"
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     }
 }

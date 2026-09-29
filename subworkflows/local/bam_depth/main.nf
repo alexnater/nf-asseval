@@ -9,7 +9,7 @@
 */
 
 include { SAMTOOLS_DEPTH                       } from '../../../modules/nf-core/samtools/depth'
-include { TABIX_BGZIPTABIX as BGZIPTABIX_DEPTH } from '../../../modules/nf-core/tabix/bgziptabix'
+include { HTSLIB_BGZIPTABIX as BGZIPTABIX_DEPTH } from '../../../modules/nf-core/htslib/bgziptabix'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -22,10 +22,9 @@ workflow BAM_DEPTH {
     ch_bam_bai        // channel (mandatory): [ val(meta), path(bam), path(bai) ]
 
     main:
-    ch_versions = channel.empty()
 
     // Run SAMtools depth over all merged bam files per reference genome:
-    ch_bam_bai
+    ch_to_depth = ch_bam_bai
         .map { meta, bam, bai ->
             def new_meta = [
                 id: "depth_${meta.ref}",
@@ -35,22 +34,24 @@ workflow BAM_DEPTH {
             [ groupKey(new_meta, meta.samples_per_type), bam ]
         }
         .groupTuple(sort: {a, b -> a.name <=> b.name})
-        .map { gkey, bams -> [ gkey.target, bams ] }
-        .set { ch_to_depth }
+        .map { gkey, bams -> [ gkey.target, bams, [], [] ] }
 
     SAMTOOLS_DEPTH (
-        ch_to_depth,
-        [[], []]
+        ch_to_depth
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_DEPTH.out.versions.first())
 
     // bgzip and tabix the depth file:
-    BGZIPTABIX_DEPTH(SAMTOOLS_DEPTH.out.tsv)
-        .gz_tbi
+    BGZIPTABIX_DEPTH (
+        SAMTOOLS_DEPTH.out.tsv.map { meta, tsv -> [ meta, tsv, [], [] ] },
+        'compress',
+        true,
+        'tsv'
+    )
+
+    BGZIPTABIX_DEPTH.out.output
+        .join(BGZIPTABIX_DEPTH.out.index)
         .set { depth }
-    ch_versions = ch_versions.mix(BGZIPTABIX_DEPTH.out.versions.first())
 
     emit:
     depth                         // channel: [ val(meta), path(depth.tsv.gz), path(depth.tsv.tbi) ]
-    versions = ch_versions        // channel: [ versions.yml ]
 }

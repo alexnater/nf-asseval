@@ -3,7 +3,7 @@ process MERYL_HISTOGRAM {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/meryl:1.4.1--h4ac6f70_0':
         'biocontainers/meryl:1.4.1--h4ac6f70_0' }"
 
@@ -12,7 +12,7 @@ process MERYL_HISTOGRAM {
 
     output:
     tuple val(meta), path("*.hist"), emit: hist
-    path "versions.yml"            , emit: versions
+    tuple val("${task.process}"), val('meryl'), eval("meryl --version |& sed 's/meryl //'"), emit: versions_meryl, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,11 +25,6 @@ process MERYL_HISTOGRAM {
     meryl histogram \\
             $db \\
             > ${prefix}.hist
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        meryl: \$( meryl --version |& sed 's/meryl //' )
-    END_VERSIONS
     """
 
     stub:
@@ -38,10 +33,5 @@ process MERYL_HISTOGRAM {
     
     """
     touch ${prefix}.hist
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        meryl: \$( meryl --version |& sed 's/meryl //' )
-    END_VERSIONS
     """
 }

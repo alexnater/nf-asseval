@@ -31,4 +31,11 @@ process WINDOWS_STATS {
         --fai $fai \\
         $args
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.summary.tsv
+    touch ${prefix}.bed
+    """
 }

@@ -25,8 +25,6 @@ workflow START_FROM_BAM {
 
     main:
 
-    ch_versions = Channel.empty()
-
     // Get bam files from bam folder
     Channel.fromFilePairs("${bam_folder}/bwa/*/*_{bam,bai}").view()
     Channel.fromFilePairs("${bam_folder}/minimap2/*/*_{bam,bai}").view()
@@ -45,5 +43,4 @@ workflow START_FROM_BAM {
 
     emit:
     bam_bai                  // channel: [ val(meta), path(bam), path(bai) ]
-    versions = ch_versions   // channel: [ versions.yml ]
 }

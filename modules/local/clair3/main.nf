@@ -3,23 +3,24 @@ process CLAIR3 {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/clair3:1.2.0--py310h779eee5_0' :
-        'biocontainers/clair3:1.2.0--py310h779eee5_0' }"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/clair3:2.0.3--py311hbc58adc_0' :
+        'biocontainers/clair3:2.0.3--py311hbc58adc_0' }"
 
     input:
     tuple val(meta) , path(bam)  , path(bai), path(bed)
     tuple val(meta2), path(fasta), path(fai)
-    val(platform)
+    tuple val(platform), val(packaged_model)
     path(model)
 
     output:
-    tuple val(meta), path("${prefix}_merge_output.vcf.gz")        , emit: vcf
-    tuple val(meta), path("${prefix}_phased_merge_output.gvcf.gz"), emit: phased, optional: true    
-    tuple val(meta), path("${prefix}_merge_output.gvcf.gz")       , emit: gvcf  , optional: true
-    tuple val(meta), path("${prefix}_pileup.vcf.gz")              , emit: pileup, optional: true
-    tuple val(meta), path("${prefix}_full_alignment.vcf.gz")      , emit: full  , optional: true
-    path "versions.yml"                                           , emit: versions
+    tuple val(meta), path("${prefix}merge_output.vcf.gz"),            emit: vcf
+    tuple val(meta), path("${prefix}merge_output.vcf.gz.tbi"),        emit: tbi
+    tuple val(meta), path("${prefix}phased_merge_output.vcf.gz"),     emit: phased_vcf, optional: true
+    tuple val(meta), path("${prefix}phased_merge_output.vcf.gz.tbi"), emit: phased_tbi, optional: true
+    tuple val(meta), path("${prefix}merge_output.gvcf.gz"),           emit: gvcf, optional: true
+    tuple val(meta), path("${prefix}merge_output.gvcf.gz.tbi"),       emit: gtbi, optional: true
+    tuple val("${task.process}"), val('clair3'), eval('run_clair3.sh --version | sed "s/^Clair3 v//"'), emit: versions_clair3, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,11 +29,10 @@ process CLAIR3 {
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     def bed_arg = bed ? "--bed_fn=${bed}" : ''
-    def model_path = model ? "${model}" : "/usr/local/bin/models/${platform}"
+    def model_path = model ? "${model}" : "/usr/local/bin/models/${packaged_model}"
 
     """
     run_clair3.sh \\
-        $args \\
         --threads=$task.cpus \\
         --sample_name=${meta.id} \\
         --bam_fn=$bam \\
@@ -40,39 +40,31 @@ process CLAIR3 {
         --output="." \\
         --platform=$platform \\
         --model_path=$model_path \\
-        $bed_arg
+        $bed_arg \\
+        $args
 
-    for file in *.{g,}vcf.gz; do
-        mv \$file ${prefix}_\${file}
+    # Rename to add prefix
+    for file in merge_output.vcf.gz \
+            merge_output.vcf.gz.tbi \
+            phased_merge_output.vcf.gz \
+            phased_merge_output.vcf.gz.tbi \
+            merge_output.gvcf.gz \
+            merge_output.gvcf.gz.tbi; do
+        if [ -e "\$file" ]; then
+            mv "\$file" "${prefix}_\${file}"
+        fi
     done
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        clair3: \$(run_clair3.sh --version | sed 's/Clair3 //')
-    END_VERSIONS
     """
 
     stub:
-    def args = task.ext.args ?: ''
-    // def prefix = task.ext.prefix ?: "${meta.id}"
-    def intermediate = args.contain("--remove_intermediate_dir") ? 0 : 1
-    def phased = args.contain("--enable_phasing") ? 1 : 0
-    def gvcf = args.contain("--gvcf") ? 1 : 0
-    """
-    if [ $intermediate -eq 1 ]; then
-        touch ${prefix}_pileup.vcf.gz ${prefix}_full_alignment.vcf.gz
-    fi
-    touch ${prefix}_merge_output.vcf.gz
-    if [ $phased -eq 1 ]; then
-        touch ${prefix}_phased_merge_output.gvcf.gz
-    fi
-    if [ $gvcf -eq 1 ]; then
-        touch ${prefix}_merge_output.gvcf.gz
-    fi
+    prefix = task.ext.prefix ?: "${meta.id}"
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        clair3: \$(run_clair3.sh --version | sed 's/Clair3 //')
-    END_VERSIONS
+    """
+    echo "" | gzip > ${prefix}_phased_merge_output.vcf.gz
+    touch ${prefix}_phased_merge_output.vcf.gz.tbi
+    echo "" | gzip > ${prefix}_merge_output.vcf.gz
+    touch ${prefix}_merge_output.vcf.gz.tbi
+    echo "" | gzip > ${prefix}_merge_output.gvcf.gz
+    touch ${prefix}_merge_output.gvcf.gz.tbi
     """
 }

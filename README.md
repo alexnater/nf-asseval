@@ -14,7 +14,8 @@
 7. Calculate coverage statistics based on mapped BAM files
 8. Call variants with [`Clair3`](https://github.com/HKU-BAL/Clair3)
 9. Generate window-wise plots of relative sequence depth and heterozygosity along chromosomes
-10. Generate ERGA Assembly Reports (EARs)
+10. Map HiC reads to the assembly and contact maps with [`PretextMap`](https://github.com/sanger-tol/PretextMap)
+11. Generate ERGA Assembly Reports (EARs)
 
 ## Usage
 
@@ -22,11 +23,7 @@
 
 If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow.
 
-All the tools used in the pipeline are containerized. Singularity/Apptainer needs to be installed on the machine running the Nextflow runner job. The following containers need to be build from definition files in `assets/containers`:
-
-```
-apptainer build pandepth_2.26.sif pandepth.def
-```
+All the tools used in the pipeline are containerized. Singularity/Apptainer needs to be installed on the machine running the Nextflow runner job. 
 
 ### Samplesheet
 

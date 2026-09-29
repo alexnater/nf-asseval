@@ -23,15 +23,12 @@ workflow MAPPABILITY {
 
     main:
 
-    ch_versions = Channel.empty()
-
     //
     // MODULE: Run gem2_gemindexer
     //
     GEM2_GEMINDEXER (
         ch_fasta_fai.map { meta, fasta, fai -> [ meta, fasta ] }
     )
-    ch_versions = ch_versions.mix(GEM2_GEMINDEXER.out.versions.first())
 
     // Combine indices with list of kmer-sizes:
     def ch_to_map = GEM2_GEMINDEXER.out.index
@@ -48,7 +45,6 @@ workflow MAPPABILITY {
         ch_to_map.index,
         ch_to_map.kmer
     )
-    ch_versions = ch_versions.mix(GEM2_GEMMAPPABILITY.out.versions.first())
 
     //
     // MODULE: Run genmap_index
@@ -56,7 +52,6 @@ workflow MAPPABILITY {
     GENMAP_INDEX (
         ch_fasta_fai
     )
-    ch_versions = ch_versions.mix(GENMAP_INDEX.out.versions.first())
 
     // Join indices with chromsizes and combine with list of kmer-sizes:
     def ch_to_genmap = GENMAP_INDEX.out.index
@@ -73,8 +68,5 @@ workflow MAPPABILITY {
         ch_to_genmap,
         [ [:], [] ]
     )
-    ch_versions = ch_versions.mix(GENMAP_MAP.out.versions.first())
 
-    emit:
-    versions = ch_versions            // channel: [ path(versions.yml) ]
 }

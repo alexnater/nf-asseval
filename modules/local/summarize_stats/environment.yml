@@ -1,0 +1,6 @@
+channels:
+- conda-forge
+- bioconda
+dependencies:
+- bioconda::pysam=0.24.1
+- conda-forge::numpy=2.5.3

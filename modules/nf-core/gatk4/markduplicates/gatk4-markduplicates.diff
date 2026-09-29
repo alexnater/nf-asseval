@@ -1,0 +1,35 @@
+Changes in component 'nf-core/gatk4/markduplicates'
+'modules/nf-core/gatk4/markduplicates/meta.yml' is unchanged
+'modules/nf-core/gatk4/markduplicates/environment.yml' is unchanged
+Changes in 'gatk4/markduplicates/main.nf':
+--- modules/nf-core/gatk4/markduplicates/main.nf
++++ modules/nf-core/gatk4/markduplicates/main.nf
+@@ -26,6 +26,7 @@
+ 
+     script:
+     def args = task.ext.args ?: ''
++    def args2 = task.ext.args2 ?: ''
+     prefix = task.ext.prefix ?: "${meta.id}.bam"
+ 
+     // If the extension is CRAM, then change it to BAM
+@@ -48,11 +49,13 @@
+     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+         MarkDuplicates \\
+         ${input_list} \\
+-        --OUTPUT ${prefix_bam} \\
++        --OUTPUT dedup.bam.tmp \\
+         --METRICS_FILE ${prefix}.metrics \\
+         --TMP_DIR . \\
+         ${reference} \\
+         ${args}
++
++    samtools sort $args2 --threads $task.cpus -o ${prefix_bam}##idx##${prefix_bam}.bai --write-index dedup.bam.tmp
+ 
+     # If cram files are wished as output, the run samtools for conversion
+     if [[ ${prefix} == *.cram ]]; then
+
+'modules/nf-core/gatk4/markduplicates/tests/main.nf.test' is unchanged
+'modules/nf-core/gatk4/markduplicates/tests/main.nf.test.snap' is unchanged
+'modules/nf-core/gatk4/markduplicates/tests/bam.config' is unchanged
+'modules/nf-core/gatk4/markduplicates/tests/cram.config' is unchanged
+************************************************************

@@ -3,7 +3,7 @@ process SMUDGEPLOT {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/45/45ca1be680749bc69ce0557205ffc6e5778e5032d3134ff8966258de51aa46cc/data' :
         'community.wave.seqera.io/library/fastk_smudgeplot:c597618c48a0dba3' }"
 

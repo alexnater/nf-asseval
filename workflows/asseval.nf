@@ -105,7 +105,6 @@ workflow ASSEVAL {
             ch_fasta_fai,
             kmer_sizes
         )
-        ch_versions = ch_versions.mix(MAPPABILITY.out.versions)
     }
 
     if (steps.contains('mapping')) {
@@ -160,7 +159,6 @@ workflow ASSEVAL {
             ch_fasta_fai,
             []
         )
-        ch_versions = ch_versions.mix(BAM_STATS.out.versions)
 
         //
         // SUBWORKFLOW: Generate depth per site reports
@@ -168,7 +166,6 @@ workflow ASSEVAL {
         BAM_DEPTH (
             ch_bam_bai
         )
-        ch_versions = ch_versions.mix(BAM_DEPTH.out.versions)
 
         //
         // SUBWORKFLOW: run_blob
@@ -195,7 +192,6 @@ workflow ASSEVAL {
             model_file,
             config_file
         )
-        ch_versions = ch_versions.mix(VARIANT_CALLING.out.versions)
 
         //
         // SUBWORKFLOW: variant_calling_gatk
@@ -206,7 +202,6 @@ workflow ASSEVAL {
                 .map { meta, fasta, fai, dict, gtf, index -> [ meta, fasta, fai, dict ] },
             params.min_contig_length
         )
-        ch_versions = ch_versions.mix(VARIANT_CALLING_GATK.out.versions)
     }
 
     if (steps.contains('report')) {
@@ -248,12 +243,10 @@ workflow ASSEVAL {
             ch_to_winstats.input,
             ch_to_winstats.fasta_fai
         )
-        ch_versions = ch_versions.mix(WINDOWS_STATS.out.versions.first())
 
         PLOT_WINDOWS (
             WINDOWS_STATS.out.bed
         )
-        ch_versions = ch_versions.mix(PLOT_WINDOWS.out.versions.first())
     }
 
     if (steps.contains('ear')) {

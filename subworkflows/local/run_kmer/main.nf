@@ -92,7 +92,6 @@ workflow RUN_KMER {
     MERYL_HISTOGRAM (
         ch_meryl_db
     )
-    ch_versions = ch_versions.mix(MERYL_HISTOGRAM.out.versions.first())
 
     //
     // MODULE: Run genomescope2

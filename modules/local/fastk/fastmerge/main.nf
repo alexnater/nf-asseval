@@ -2,33 +2,28 @@ process FASTK_MERGE {
     tag "$meta.id"
     label 'process_high'
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/fastk:1.2--h71df26d_1' :
-        'biocontainers/fastk:1.2--h71df26d_1' }"
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/02/02c05b2ec421debc83883ef9a211291e3220546c12f7c54cb78e66209cb2797d/data' :
+        'community.wave.seqera.io/library/fastk:1.2--4bc70c6cd0d420bd' }"
 
     input:
     tuple val(meta), path(ktabs)
 
     output:
-    tuple val(meta), path("*.hist")                      , emit: hist
-    tuple val(meta), path("*.txt")                       , emit: txt
-    tuple val(meta), path("*.ktab*", hidden: true)       , emit: ktab, optional: true
-    tuple val(meta), path("*.{prof,pidx}*", hidden: true), emit: prof, optional: true
-    path "versions.yml"                                  , emit: versions
+    tuple val(meta), path("*.hist")                       , emit: hist
+    tuple val(meta), path("*.txt")                        , emit: txt
+    tuple val(meta), path("*.ktab*", hidden: true)        , emit: ktab, optional: true
+    tuple val(meta), path("*.{prof,pidx}*", hidden: true) , emit: prof, optional: true
+    tuple val("${task.process}"), val('fastk'), val('1.2'), emit: versions_fastk, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    // Exit if running this module with -profile conda / -profile mamba
-    if (workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1) {
-        error "FASTK_MERGE module does not support Conda. Please use Docker / Singularity / Podman instead."
-    }
-
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def FASTK_VERSION = '1.2--h71df26d_1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
 
     """
     mkdir -p tmp    
@@ -47,11 +42,6 @@ process FASTK_MERGE {
         $args2 \\
         ${prefix}.hist \\
         > ${prefix}.txt
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        fastk: $FASTK_VERSION
-    END_VERSIONS
     """
 
     stub:
@@ -63,10 +53,5 @@ process FASTK_MERGE {
     touch ${prefix}.hist
     touch ${prefix}.txt
     $touch_ktab
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        fastk: $FASTK_VERSION
-    END_VERSIONS
     """
 }

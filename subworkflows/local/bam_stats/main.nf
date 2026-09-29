@@ -26,7 +26,6 @@ workflow BAM_STATS {
     bed_file       // file (ptional)
 
     main:
-    ch_versions = channel.empty()
 
     // Combine bam files with their reference
     ch_mapped = ch_bam_bai
@@ -42,22 +41,22 @@ workflow BAM_STATS {
 
     // run SAMtools flagstat per merged bam file:
     SAMTOOLS_FLAGSTAT(ch_mapped.bam_bai)
-    ch_versions = ch_versions.mix(SAMTOOLS_FLAGSTAT.out.versions.first())
 
     // run mosdepth per merged bam file:
     MOSDEPTH (
         ch_mapped.bam_bai.map { meta, bam, bai -> [ meta, bam, bai, bed_file ] },
-        ch_mapped.fasta
+        ch_mapped.fasta,
+        []
     )
-    ch_versions = ch_versions.mix(MOSDEPTH.out.versions.first())
 
+/*
     // run pandepth per merged bam file:
     PANDEPTH (
         ch_mapped.bam_bai.map { meta, bam, bai -> [ meta, bam, bai, bed_file ] },
         ch_mapped.fasta,
         [ [:], [] ]
     )
-    ch_versions = ch_versions.mix(PANDEPTH.out.versions.first())
+*/
 
     // Summarize all bam stats:
     ch_to_summary = SAMTOOLS_FLAGSTAT.out.flagstat
@@ -74,10 +73,8 @@ workflow BAM_STATS {
         .groupTuple(sort: true)
 
     SUMMARIZE_STATS(ch_to_summary)
-    ch_versions = ch_versions.mix(SUMMARIZE_STATS.out.versions)
 
     emit:
     depth = MOSDEPTH.out.summary_txt     // channel: [ meta, depth ]
     coverage = MOSDEPTH.out.global_txt   // channel: [ meta, coverage ]
-    versions = ch_versions               // channel: [ versions.yml ]
 }

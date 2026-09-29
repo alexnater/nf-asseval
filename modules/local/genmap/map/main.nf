@@ -3,7 +3,7 @@ process GENMAP_MAP {
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/44/449e9218f70b57e5b473c560ba5f0bf2e8e4a9f66b28d10f75868135868ba46d/data':
         'community.wave.seqera.io/library/genmap_ucsc-bedgraphtobigwig:34c62fd0055b0259' }"
 
@@ -13,7 +13,8 @@ process GENMAP_MAP {
 
     output:
     tuple val(meta), path("*.bw"), emit: bigwig
-    path "versions.yml"          , emit: versions
+    tuple val("${task.process}"), val('genmap'), eval("genmap --version | sed 's/GenMap version: //; s/SeqAn.*\$//'"), emit: versions_genmap, topic: versions
+    tuple val("${task.process}"), val('bedGraphToBigWig'), eval("bedGraphToBigWig 2>&1 | head -n 1 | sed 's/^.*bedGraphToBigWig v //; s/ .*\$//'"), emit: versions_bedgraphtobigwig, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,6 +26,7 @@ process GENMAP_MAP {
     def bed    = regions ? "--selection ${regions}" : ""
 
     if ("$index" == "${prefix}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
+
     """
     genmap \\
         map \\
@@ -40,12 +42,6 @@ process GENMAP_MAP {
         $chromsizes \\
         ${prefix}.bw \\
         ${args2}
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        genmap: \$(genmap --version | sed 's/GenMap version: //; s/SeqAn.*\$//')
-        bedGraphToBigWig: \$( echo \$(bedGraphToBigWig 2>&1) | head -n 1 | sed 's/^.*bedGraphToBigWig v //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -54,11 +50,5 @@ process GENMAP_MAP {
     if ("$index" == "${prefix}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
     """
     touch ${prefix}.bw
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        genmap: \$(genmap --version | sed 's/GenMap version: //; s/SeqAn.*\$//')
-        bedGraphToBigWig: \$( echo \$(bedGraphToBigWig 2>&1) | head -n 1 | sed 's/^.*bedGraphToBigWig v //; s/ .*\$//')
-    END_VERSIONS
     """
 }

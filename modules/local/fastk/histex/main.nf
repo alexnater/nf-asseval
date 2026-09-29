@@ -2,40 +2,30 @@ process FASTK_HISTEX {
     tag "$meta.id"
     label 'process_low'
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/fastk:1.2--h71df26d_1' :
-        'biocontainers/fastk:1.2--h71df26d_1' }"
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/02/02c05b2ec421debc83883ef9a211291e3220546c12f7c54cb78e66209cb2797d/data' :
+        'community.wave.seqera.io/library/fastk:1.2--4bc70c6cd0d420bd' }"
 
     input:
     tuple val(meta), path(hist)
 
     output:
-    tuple val(meta), path("*_hist.txt")         , emit: hist
-    path "versions.yml"                         , emit: versions
+    tuple val(meta), path("*_hist.txt")                   , emit: hist
+    tuple val("${task.process}"), val('fastk'), val('1.2'), emit: versions_fastk, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    // Exit if running this module with -profile conda / -profile mamba
-    if (workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1) {
-        error "FASTK_HISTEX module does not support Conda. Please use Docker / Singularity / Podman instead."
-    }
-
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def FASTK_VERSION = '1.2--h71df26d_1' // WARN: Version information not provided by tool on CLI. Please update this string when bumping container versions.
 
     """
     Histex \\
         $args \\
         $hist \\
         > ${prefix}_hist.txt
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        fastk: $FASTK_VERSION
-    END_VERSIONS
     """
 
     stub:
@@ -43,10 +33,5 @@ process FASTK_HISTEX {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}_hist.txt
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        fastk: $FASTK_VERSION
-    END_VERSIONS
     """
 }

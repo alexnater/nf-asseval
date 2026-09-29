@@ -12,7 +12,7 @@ process PANDEPTH {
 
     output:
     tuple val(meta), path("*.stat.gz"), emit: stats
-    path  "versions.yml"              , emit: versions
+    tuple val("${task.process}"), val('pandepth'), val('2.26'), emit: versions_pandepth, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -27,7 +27,6 @@ process PANDEPTH {
     def reference = fasta ? "-r ${fasta}" : ""
     def annotation = gff ? "-g ${gff}" : ""
     def interval = bed ? "-b ${bed}" : ""
-    def VERSION = '2.25'
 
     """
     pandepth \\
@@ -38,11 +37,6 @@ process PANDEPTH {
         $args \\
         -i $bam \\
         -o $prefix
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        pandepth: $VERSION
-    END_VERSIONS
     """
 
     stub:
@@ -51,14 +45,7 @@ process PANDEPTH {
         error "PANDEPTH module does not support Conda. Please use Docker / Singularity / Podman instead."
     }
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def VERSION = '1.8.0'
     """
     touch ${prefix}.chr.stat.gz
-
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        pandepth: $VERSION
-    END_VERSIONS
     """
 }

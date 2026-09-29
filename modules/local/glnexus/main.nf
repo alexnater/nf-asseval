@@ -2,7 +2,10 @@ process GLNEXUS {
     tag "$meta.id"
     label 'process_high'
 
-    container "containers/glnexus_1.4.1.sif"
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c3/c385aa04ad92c131a0cf00d4070a94aafb24eca9ce323ce49f91b74ee557b58f/data' :
+        'community.wave.seqera.io/library/bcftools_glnexus_htslib:626d3efb138422e9' }"
 
     input:
     tuple val(meta), path(gvcfs)
@@ -13,7 +16,9 @@ process GLNEXUS {
     output:
     tuple val(meta), path("*.bcf")                  , emit: bcf
     tuple val(meta), path("*.vcf.gz"), path("*.tbi"), emit: vcf_tbi
-    path "versions.yml"                             , emit: versions
+    tuple val("${task.process}"), val('glnexus'), eval("glnexus_cli 2>&1 | head -n 1 | sed 's/^.*release v//; s/ .*\$//'"), emit: versions_glnexus, topic: versions
+    tuple val("${task.process}"), val('bcftools'), eval("bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//'"), emit: versions_bcftools, topic: versions
+    tuple val("${task.process}"), val('tabix'), eval("tabix -h 2>&1 | sed 's/^.*Version: //; s/ .*\$//'"), emit: versions_tabix, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -59,25 +64,11 @@ process GLNEXUS {
         -p vcf \\
         $args4 \\
         ${prefix}.vcf.gz
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        glnexus: \$( echo \$(glnexus_cli 2>&1) | head -n 1 | sed 's/^.*release v//; s/ .*\$//')
-        bcftools: \$( echo \$(bcftools --version 2>&1) | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
-        tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.bcf
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        glnexus: \$( echo \$(glnexus_cli 2>&1) | head -n 1 | sed 's/^.*release v//; s/ .*\$//')
-        bcftools: \$( echo \$(bcftools --version 2>&1) | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
-        tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
-    END_VERSIONS
     """
 }

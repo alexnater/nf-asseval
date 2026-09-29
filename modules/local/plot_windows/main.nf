@@ -2,14 +2,17 @@ process PLOT_WINDOWS {
     tag "$meta.id"
     label 'process_single'
 
-    container "/data/users/anater/singularity_cache/r_container.sif"
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/11/115554413e53171dfff5f5752a67708e1e4e837c2fd87e333e310076110e54b7/data' :
+        'community.wave.seqera.io/library/r-ggplot2_r-optparse:6570bf84e2757fb9' }"
 
     input:
     tuple val(meta), path(bed)
 
     output:
     tuple val(meta), path("*.winstats.pdf"), emit: pdf
-    path "versions.yml"                    , emit: versions
+    tuple val("${task.process}"), val('rscript'), eval("Rscript --version | sed 's/^.*version \\(.*\\) (.*/\\1/'"), emit: versions_rscript, topic: versions
 
     script:
     def args = task.ext.args ?: ""
@@ -20,10 +23,11 @@ process PLOT_WINDOWS {
         --bed $bed \\
         --outfile ${prefix}.winstats.pdf \\
         $args
+    """
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        Rscript: \$(Rscript --version | sed 's/^.*version \\(.*\\) (.*/\\1/')
-    END_VERSIONS
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.winstats.pdf
     """
 }
