@@ -11,10 +11,10 @@
 4. Run k-mer based evaluation of assemblies with [`MerquryFK`](https://github.com/thegenemyers/MERQURY.FK)
 5. Generate mappability tracks with [`GenMap`](https://github.com/cpockrandt/genmap)
 6. Map reads back to the assembly with [`minimap2`](https://github.com/lh3/minimap2)
-7. Calculate coverage statistics based on mapped BAM files
-8. Call variants with [`Clair3`](https://github.com/HKU-BAL/Clair3)
+7. Calculate coverage statistics based on mapped BAM files with [`mosdepth`](https://github.com/brentp/mosdepth)
+8. Call variants with [`Clair3`](https://github.com/HKU-BAL/Clair3) and [`GATK`](https://gatk.broadinstitute.org/hc/en-us)
 9. Generate window-wise plots of relative sequence depth and heterozygosity along chromosomes
-10. Map HiC reads to the assembly and contact maps with [`PretextMap`](https://github.com/sanger-tol/PretextMap)
+10. Map HiC reads to the assembly and generate contact maps with [`PretextMap`](https://github.com/sanger-tol/PretextMap)
 11. Generate ERGA Assembly Reports (EARs)
 
 ## Usage
