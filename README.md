@@ -5,7 +5,7 @@
 
 **nf-asseval** is a bioinformatics pipeline for evaluating genome assemblies. The pipeline is built using [Nextflow](https://www.nextflow.io/) and follows the [nf-core](https://nf-co.re/) community guidelines to ensure high-quality, reproducible, and portable analyses.
 
-1. Run assembly evaluation with [`Quast`](https://github.com/ablab/quast)
+1. Run assembly evaluation with [`Quast`](https://github.com/ablab/quast) and [`BUSCO`](https://busco.ezlab.org)
 2. Run k-mer counting with [`FastK`](https://github.com/thegenemyers/FASTK)
 3. Run k-mer based evaluation of raw reads with GeneScopeFK [`GeneScopeFK`](https://github.com/thegenemyers/GENESCOPE.FK)
 4. Run k-mer based evaluation of assemblies with [`MerquryFK`](https://github.com/thegenemyers/MERQURY.FK)
