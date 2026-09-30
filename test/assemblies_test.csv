@@ -1,7 +1,7 @@
-sample,type,fasta,gtf,yaml
-Pup3-NMR,pri_cleaned,test/mHetGla1.1.pri.cleaned_chr1_10Mb_12Mb.fa,,
-Pup3-NMR,alt_cleaned,test/mHetGla1.1.alt.cleaned_chr1_10Mb_12Mb.fa,,
-Queen-NMR,pri_cleaned,test/mHetGla2.1.pri.cleaned_chr1_10Mb_12Mb.fa,,
-Queen-NMR,alt_cleaned,test/mHetGla2.1.alt.cleaned_chr1_10Mb_12Mb.fa,,
-Dad-NMR,pri_cleaned,test/mHetGla3.1.pri.cleaned_chr1_10Mb_12Mb.fa,,
-Dad-NMR,alt_cleaned,test/mHetGla3.1.alt.cleaned_chr1_10Mb_12Mb.fa,,
+sample,type,status,fasta
+Pup3-NMR,pri,curated,test/mHetGla1.1.pri.cleaned_chr1_10Mb_12Mb.fa
+Pup3-NMR,alt,curated,test/mHetGla1.1.alt.cleaned_chr1_10Mb_12Mb.fa
+Queen-NMR,pri,curated,test/mHetGla2.1.pri.cleaned_chr1_10Mb_12Mb.fa
+Queen-NMR,alt,curated,test/mHetGla2.1.alt.cleaned_chr1_10Mb_12Mb.fa
+Dad-NMR,pri,curated,test/mHetGla3.1.pri.cleaned_chr1_10Mb_12Mb.fa
+Dad-NMR,alt,curated,test/mHetGla3.1.alt.cleaned_chr1_10Mb_12Mb.fa
