@@ -190,7 +190,8 @@ workflow ASSEVAL {
             ch_fasta_fai,
             [],
             model_file,
-            config_file
+            config_file,
+            params.min_contig_length
         )
 
         //

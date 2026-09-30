@@ -5,6 +5,13 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "bcftools/concat": {
+                        "branch": "master",
+                        "git_sha": "feef37435aea56816adf4b3bde1fc76aac327a8d",
+                        "installed_by": [
+                            "modules"
+                        ]
+                    },
                     "blobtk/create": {
                         "branch": "master",
                         "git_sha": "82f099dea43620d4d9a80b9d7014731d173f28a2",

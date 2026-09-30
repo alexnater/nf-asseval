@@ -14,12 +14,12 @@ process CLAIR3 {
     path(model)
 
     output:
-    tuple val(meta), path("${prefix}merge_output.vcf.gz"),            emit: vcf
-    tuple val(meta), path("${prefix}merge_output.vcf.gz.tbi"),        emit: tbi
-    tuple val(meta), path("${prefix}phased_merge_output.vcf.gz"),     emit: phased_vcf, optional: true
-    tuple val(meta), path("${prefix}phased_merge_output.vcf.gz.tbi"), emit: phased_tbi, optional: true
-    tuple val(meta), path("${prefix}merge_output.gvcf.gz"),           emit: gvcf, optional: true
-    tuple val(meta), path("${prefix}merge_output.gvcf.gz.tbi"),       emit: gtbi, optional: true
+    tuple val(meta), path("${prefix}_merge_output.vcf.gz"),            emit: vcf
+    tuple val(meta), path("${prefix}_merge_output.vcf.gz.tbi"),        emit: tbi
+    tuple val(meta), path("${prefix}_phased_merge_output.vcf.gz"),     emit: phased_vcf, optional: true
+    tuple val(meta), path("${prefix}_phased_merge_output.vcf.gz.tbi"), emit: phased_tbi, optional: true
+    tuple val(meta), path("${prefix}_merge_output.gvcf.gz"),           emit: gvcf, optional: true
+    tuple val(meta), path("${prefix}_merge_output.gvcf.gz.tbi"),       emit: gtbi, optional: true
     tuple val("${task.process}"), val('clair3'), eval('run_clair3.sh --version | sed "s/^Clair3 v//"'), emit: versions_clair3, topic: versions
 
     when:
